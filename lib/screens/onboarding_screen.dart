@@ -101,9 +101,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         _controller.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
                       }
                     },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    style: ElevatedButton.styleFrom(),
                     child: Text(currentPage == 2 ? 'Get Started' : 'Next', style: const TextStyle(color: Colors.white)),
                   ),
                 ),

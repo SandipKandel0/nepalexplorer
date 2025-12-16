@@ -7,8 +7,6 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-
-      
       appBar: AppBar(
         elevation: 0,
         leading: const Icon(Icons.menu, color: Colors.black),
@@ -27,7 +25,6 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
       body: Container(),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: Colors.black,
