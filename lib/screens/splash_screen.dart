@@ -5,10 +5,10 @@ class SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Navigate after frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(seconds: 3), () {
-        Navigator.pushReplacementNamed(context, '/onboarding'); // go to onboarding first
+        // ignore: use_build_context_synchronously
+        Navigator.pushReplacementNamed(context, '/onboarding');
       });
     });
 
@@ -19,8 +19,8 @@ class SplashScreen extends StatelessWidget {
         color: Colors.deepPurple.shade50,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
+          children: const [
+            Text(
               'NepalExplorer',
               style: TextStyle(
                 fontSize: 40,
@@ -28,8 +28,8 @@ class SplashScreen extends StatelessWidget {
                 color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
+            SizedBox(height: 20),
+            Text(
               'Explore Nepal Easily',
               style: TextStyle(
                 fontSize: 20,
@@ -37,7 +37,7 @@ class SplashScreen extends StatelessWidget {
                 color: Colors.deepPurple,
               ),
             ),
-            const SizedBox(height: 50),
+            SizedBox(height: 50),
             CircularProgressIndicator(
               color: Colors.deepPurple,
             ),
