@@ -41,6 +41,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -51,24 +53,24 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 currentPage = index;
               });
             },
-            children: const [
+            children: [
               OnboardPage(
                 image: 'assets/images/image1.png',
                 title: 'Explore Nepal Easily',
-                subtitle:
-                    'Discover beautiful destinations, plan trips, and enjoy adventures.',
+                subtitle: 'Discover beautiful destinations, plan trips, and enjoy adventures.',
+                screenWidth: screenWidth,
               ),
               OnboardPage(
                 image: 'assets/images/image1.png',
                 title: 'Plan Your Trip',
-                subtitle:
-                    'Book guides, hotels, and transport in just a few taps.',
+                subtitle: 'Book guides, hotels, and transport in just a few taps.',
+                screenWidth: screenWidth,
               ),
               OnboardPage(
                 image: 'assets/images/image1.png',
                 title: 'Share Your Experience',
-                subtitle:
-                    'Rate destinations and share your adventures with the community.',
+                subtitle: 'Rate destinations and share your adventures with the community.',
+                screenWidth: screenWidth,
               ),
             ],
           ),
@@ -77,8 +79,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             right: 20,
             child: TextButton(
               onPressed: goToLogin,
-              child: const Text('Skip',
-                  style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
+              child: const Text('Skip', style: TextStyle(color: Colors.blueAccent, fontWeight: FontWeight.bold)),
             ),
           ),
           Positioned(
@@ -97,17 +98,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       if (currentPage == 2) {
                         goToLogin();
                       } else {
-                        _controller.nextPage(
-                            duration: const Duration(milliseconds: 500),
-                            curve: Curves.easeInOut);
+                        _controller.nextPage(duration: const Duration(milliseconds: 500), curve: Curves.easeInOut);
                       }
                     },
                     style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blueAccent,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12))),
-                    child: Text(currentPage == 2 ? 'Get Started' : 'Next',
-                        style: const TextStyle(color: Colors.white)),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                    child: Text(currentPage == 2 ? 'Get Started' : 'Next', style: const TextStyle(color: Colors.white)),
                   ),
                 ),
               ],
@@ -123,30 +120,28 @@ class OnboardPage extends StatelessWidget {
   final String image;
   final String title;
   final String subtitle;
+  final double screenWidth;
 
-  const OnboardPage(
-      {super.key, required this.image, required this.title, required this.subtitle});
+  const OnboardPage({super.key, required this.image, required this.title, required this.subtitle, required this.screenWidth});
 
   @override
   Widget build(BuildContext context) {
+    final imageWidth = screenWidth > 600 ? screenWidth * 0.5 : screenWidth * 0.7;
+
     return Container(
       padding: const EdgeInsets.all(40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Expanded(flex: 6, child: Image.asset(image, fit: BoxFit.contain)),
+          Expanded(flex: 6, child: Image.asset(image, width: imageWidth, fit: BoxFit.contain)),
           const SizedBox(height: 32),
           Expanded(
             flex: 2,
             child: Column(
               children: [
-                Text(title,
-                    textAlign: TextAlign.center,
-                    style:
-                        const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+                Text(title, textAlign: TextAlign.center, style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 16),
-                Text(subtitle,
-                    textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
+                Text(subtitle, textAlign: TextAlign.center, style: const TextStyle(fontSize: 16)),
               ],
             ),
           )

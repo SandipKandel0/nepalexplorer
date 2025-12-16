@@ -5,16 +5,19 @@ class LoginScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final containerWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
+
     return Scaffold(
       body: SingleChildScrollView(
         child: Container(
           width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 40),
           decoration: const BoxDecoration(color: Color.fromARGB(255, 248, 247, 246)),
           child: Center(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset('assets/images/image1.png', width: 300, height: 120),
+                Image.asset('assets/images/image1.png', width: screenWidth * 0.5, height: 120, fit: BoxFit.contain),
                 const SizedBox(height: 20),
                 const Text("Welcome back!!",
                     style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold, color: Colors.blueAccent)),
@@ -22,7 +25,7 @@ class LoginScreen extends StatelessWidget {
                 const Text("Login", style: TextStyle(color: Colors.blueAccent, fontSize: 18)),
                 const SizedBox(height: 40),
                 Container(
-                  width: 400,
+                  width: containerWidth,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
                       color: const Color.fromARGB(255, 153, 174, 235),
@@ -53,7 +56,7 @@ class LoginScreen extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.deepPurpleAccent,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18))),
-                          onPressed: () => Navigator.pushNamed(context, '/home'),
+                          onPressed: () => Navigator.pushNamed(context, '/dashboard'),
                           child: const Text("Login",
                               style: TextStyle(fontSize: 18, color: Color.fromARGB(255, 237, 83, 75))),
                         ),
