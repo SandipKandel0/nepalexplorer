@@ -10,13 +10,13 @@ ThemeData getApplicationTheme(){
     elevation: 0,
     centerTitle: true,
     titleTextStyle: TextStyle(
-      color: const Color.fromARGB(255, 13, 13, 13),
+      color: const Color.fromARGB(255, 29, 28, 28),
       fontWeight: FontWeight.bold,
       fontFamily: 'OpenSansBold',
       fontSize: 20,
     ),
   ),
-   elevatedButtonTheme: ElevatedButtonThemeData(
+  elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color.fromARGB(255, 224, 133, 15),
         foregroundColor: Colors.white,
