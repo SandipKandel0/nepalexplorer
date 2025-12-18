@@ -6,7 +6,7 @@ ThemeData getApplicationTheme(){
     fontFamily: 'OpenSansRegular',
     useMaterial3: true,
     appBarTheme:  AppBarTheme(
-      backgroundColor: const Color.fromARGB(255, 164, 187, 198),
+      backgroundColor: const Color.fromARGB(255, 90, 145, 170),
     elevation: 0,
     centerTitle: true,
     titleTextStyle: TextStyle(
