@@ -9,29 +9,25 @@ class DashboardScreen extends StatelessWidget {
       'title': 'Pashupatinath Temple',
       'location': 'Bagmati, Kathmandu',
       'rating': '4.7',
-      'image':
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPMe5fuKSW0dIoVEtvO3qRd8mlqFbhMEZXJA&s',
+      'image': 'assets/images/pashupatinath.jpg',
     },
     {
       'title': 'Chitwan National Park',
       'location': 'Bagmati, Chitwan',
       'rating': '4.6',
-      'image':
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPMe5fuKSW0dIoVEtvO3qRd8mlqFbhMEZXJA&s',
+      'image': 'assets/images/chitwan.jpg',
     },
     {
       'title': 'Boudhanath Stupa',
       'location': 'Kathmandu',
       'rating': '4.8',
-      'image':
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPMe5fuKSW0dIoVEtvO3qRd8mlqFbhMEZXJA&s',
+      'image': 'assets/images/BoudhhaStupa.jpg',
     },
     {
       'title': 'Lumbini Garden',
       'location': 'Lumbini',
       'rating': '4.5',
-      'image':
-          'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSPMe5fuKSW0dIoVEtvO3qRd8mlqFbhMEZXJA&s',
+      'image': 'assets/images/Lumbini.jpg',
     },
   ];
 
@@ -40,7 +36,6 @@ class DashboardScreen extends StatelessWidget {
     {'icon': Icons.park, 'label': 'National\nPark'},
     {'icon': Icons.temple_hindu, 'label': 'Religious'},
     {'icon': Icons.directions_walk, 'label': 'Adventure'},
-    {'icon': Icons.fastfood, 'label': 'Food'},
   ];
 
   final List<Map<String, dynamic>> activities = const [
@@ -182,13 +177,15 @@ class DashboardScreen extends StatelessWidget {
 class CategoryItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  const CategoryItem({required this.icon, required this.label});
+  const CategoryItem({super.key,
+  required this.icon,
+  required this.label});
 
   @override
   Widget build(BuildContext context) {
     return Column(children: [
       CircleAvatar(radius: 22, backgroundColor: Colors.grey.shade200, child: Icon(icon)),
-      const SizedBox(height: 6),
+      const SizedBox(height: 7),
       Text(label, textAlign: TextAlign.center, style: const TextStyle(fontSize: 12)),
     ]);
   }
@@ -208,16 +205,16 @@ class DestinationCard extends StatelessWidget {
     return SizedBox(
       width: 180,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, 
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
         ClipRRect(borderRadius: BorderRadius.circular(16),
-        child: Image.network(image,
+        child: Image.asset(image,
           height: 170,
           width: double.infinity, fit: BoxFit.cover)),
         const SizedBox(height: 8),
 
         Text(title, style: const TextStyle(
-          fontWeight: FontWeight.bold), 
+          fontWeight: FontWeight.bold),
           maxLines: 1, overflow: TextOverflow.ellipsis),
         const SizedBox(height: 4),
 
@@ -227,7 +224,7 @@ class DestinationCard extends StatelessWidget {
         
         Row(children:
         [const Icon(Icons.star, size: 14, color: Colors.orange),
-         const SizedBox(width: 4), Text(rating)]),
+        const SizedBox(width: 4), Text(rating)]),
       ]),
     );
   }
@@ -236,7 +233,7 @@ class DestinationCard extends StatelessWidget {
 class ActivityItem extends StatelessWidget {
   final IconData icon;
   final String label;
-  const ActivityItem({
+  const ActivityItem({super.key,
     required this.icon,
     required this.label});
 
@@ -249,3 +246,4 @@ class ActivityItem extends StatelessWidget {
     ]);
   }
 }
+

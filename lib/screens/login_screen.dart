@@ -23,7 +23,7 @@ class LoginScreen extends StatelessWidget {
             ),
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.3),
+                color: Color.fromRGBO(0, 0, 0, 0.5),
               ),
             ),
             Center(
@@ -32,10 +32,10 @@ class LoginScreen extends StatelessWidget {
                   width: containerWidth,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.85),
+                    color: const Color.fromARGB(31, 235, 228, 228),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [
-                      BoxShadow(color: Color.fromARGB(66, 236, 171, 6))
+                      BoxShadow(color: Colors.white)
                     ],
                   ),
                   child: Column(

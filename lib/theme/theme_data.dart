@@ -21,7 +21,7 @@ ThemeData getApplicationTheme(){
         backgroundColor: const Color.fromARGB(255, 224, 133, 15),
         foregroundColor: Colors.white,
         textStyle: const TextStyle(
-          fontFamily: 'OpenSansBold',
+          fontFamily: 'RobotoItalic',
           fontSize: 20,
         ),
         padding: const EdgeInsets.symmetric(
