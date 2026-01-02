@@ -102,7 +102,7 @@ class DashboardScreen extends StatelessWidget {
                         final item = categories[index];
                         return CategoryItem(icon: item['icon'], label: item['label']);
                       },
-                      separatorBuilder: (context, index) => const SizedBox(width: 16),
+                      separatorBuilder: (context, index) => const SizedBox(width: 40),
                     ),
                   ),
                 ],
@@ -123,7 +123,7 @@ class DashboardScreen extends StatelessWidget {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: destinations.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 16),
+                separatorBuilder: (context, index) => const SizedBox(width: 20),
                 itemBuilder: (context, index) {
                   final item = destinations[index];
                   return DestinationCard(

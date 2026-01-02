@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/screens/bottom_nav.dart';
 import 'package:nepalexplorer/theme/theme_data.dart';
-import 'screens/splash_screen.dart';
+import 'features/splash/presentation/pages/splash_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
