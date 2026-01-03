@@ -12,55 +12,60 @@ final authLocalDatasourceProvider = Provider<AuthLocalDatasource>((ref) {
   return AuthLocalDatasource(hiveAuthService: hiveAuthService);
 });
 
-
-class AuthLocalDatasource implements IAuthDatasource{
+class AuthLocalDatasource implements IAuthDatasource {
   final HiveAuthService _hiveAuthService;
-    AuthLocalDatasource({required HiveAuthService hiveAuthService})
-    : _hiveAuthService = hiveAuthService;
-    
-  @override
-  Future<AuthHiveModel> getCurrentUser() {
-    // TODO: implement getCurrentUser
-    throw UnimplementedError();
-  }
 
-  @override
-  Future<bool> isEmailExists(String email) async{
-  try {
-    final exists = _hiveAuthService.isEmailExists(email);
-    return Future.value(exists);
-    }catch(e){
-      return Future.value(false);
-    }
-  }
+  AuthLocalDatasource({required HiveAuthService hiveAuthService})
+      : _hiveAuthService = hiveAuthService;
 
+  /// LOGIN
   @override
-  Future<AuthHiveModel?> login(String email, String password) async{
+  Future<AuthHiveModel?> login(String email, String password) async {
     try {
-    final user= await HiveAuthService.login(email,password);
-    return Future.value(user);
-    }catch(e){
-      return Future.value(null);
+      return await _hiveAuthService.login(email, password);
+    } catch (_) {
+      return null;
     }
   }
 
+  /// REGISTER
   @override
-  Future<bool> logout() async{
+  Future<bool> register(AuthHiveModel model) async {
+    try {
+      return await _hiveAuthService.registerUser(model);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// CHECK IF EMAIL EXISTS (converted to Future)
+@override
+Future<bool> isEmailExists(String email) async {
   try {
-    await HiveAuthService.logout();
-    return Future.value(true);
-    }catch(e){
-      return Future.value(false);
+    return Future.value(_hiveAuthService.isEmailExists(email));
+  } catch (_) {
+    return false;
+  }
+}
+
+  /// LOGOUT
+  @override
+  Future<bool> logout() async {
+    try {
+      await _hiveAuthService.logout();
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
-  @override
-  Future<bool> register(AuthHiveModel model) async{
-    try{
-      await HiveAuthService.registerUser(model);
-      return Future.value(true);
-    }catch(e){
-      return Future.value(false);
-    }
+  /// CURRENT USER
+@override
+Future<AuthHiveModel?> getCurrentUser() async {
+  try {
+    return Future.value(_hiveAuthService.getCurrentUser());
+  } catch (_) {
+    return null;
+  }
 }
 }

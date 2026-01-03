@@ -7,67 +7,59 @@ import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
 import 'package:nepalexplorer/features/auth/domain/repositories/auth_repository.dart';
 
-final authRepositoryProvider = Provider<IAuthRepository>((ref){
-  return AuthRepository(authDatssource:ref.read(authLocalDatasourceProvider));
+final authRepositoryProvider = Provider<IAuthRepository>((ref) {
+  final authDatasource = ref.watch(authLocalDatasourceProvider);
+  return AuthRepository(authDatasource: authDatasource);
 });
 
 class AuthRepository implements IAuthRepository {
   final IAuthDatasource _authDatasource;
 
-  AuthRepository({required IAuthDatasource authDatssource})
-  :_authDatasource =authDatssource;
-
-  @override
-  Future<Either<Failure, AuthEntity>> getCurrentUser() async {
-    try{
-      final user = await _authDatasource.getCurrentUser();
-      if (user != null){
-        final entity = user.toEntity();
-        return Right(entity);
-      }
-      return Left(LocalDatabaseFailure(message: 'No user logged in'));
-      }catch(e){
-      return Left(LocalDatabaseFailure(message: e.toString()));
-    }
-  }
+  AuthRepository({required IAuthDatasource authDatasource})
+      : _authDatasource = authDatasource;
 
   @override
   Future<Either<Failure, AuthEntity>> login(String email, String password) async {
-    try{
-      final user = await _authDatasource.login(email,password);
-      if (user !=null){
-        final entity=user.toEntity();
-        return Right(entity);
-      }
+    try {
+      final user = await _authDatasource.login(email, password);
+      if (user != null) return Right(user.toEntity());
       return Left(LocalDatabaseFailure(message: 'Invalid email or password'));
-    }catch(e){
+    } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
 
   @override
   Future<Either<Failure, bool>> logout() async {
-    try{
+    try {
       final result = await _authDatasource.logout();
-      if (result){
-        return Right(true);
-      }
+      if (result) return Right(true);
       return Left(LocalDatabaseFailure(message: 'Failed to logout user'));
-    }catch(e){
+    } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
+
   @override
   Future<Either<Failure, bool>> register(AuthEntity entity) async {
-    try{
+    try {
       final model = AuthHiveModel.fromEntity(entity);
       final result = await _authDatasource.register(model);
-      if (result){
-        return Right(true);
-      }
+      if (result) return Right(true);
       return Left(LocalDatabaseFailure(message: 'Failed to register user'));
-    }catch(e){
+    } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }
-}
+  }
+
+  @override
+  Future<Either<Failure, AuthEntity>> getCurrentUser() async {
+    try {
+      final user = await _authDatasource.getCurrentUser();
+      if (user != null) return Right(user.toEntity());
+      return Left(LocalDatabaseFailure(message: 'No current user logged in'));
+    } catch (e) {
+      return Left(LocalDatabaseFailure(message: e.toString()));
+    }
+  }
 }

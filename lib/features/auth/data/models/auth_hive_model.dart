@@ -36,7 +36,7 @@ class AuthHiveModel extends HiveObject {
   // Create HiveModel from Entity
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
     return AuthHiveModel(
-      authId: entity.authId ?? const Uuid().v4(),
+      authId: entity.authId ?? Uuid().v4(),  // Fixed: remove const
       fullName: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
@@ -56,8 +56,9 @@ class AuthHiveModel extends HiveObject {
       password: password,
     );
   }
-   static List<AuthEntity> toEntityList(
-    List<AuthHiveModel> models) {
+
+  // Convert list of models to list of entities
+  static List<AuthEntity> toEntityList(List<AuthHiveModel> models) {
     return models.map((model) => model.toEntity()).toList();
-}
+  }
 }

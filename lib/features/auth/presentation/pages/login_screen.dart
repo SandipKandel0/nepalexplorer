@@ -1,7 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nepalexplorer/features/auth/domain/usecases/login_usecase.dart';
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+
+  bool _isLoading = false;
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    final loginUsecase = ref.read(loginUsecaseProvider);
+
+    final result = await loginUsecase(
+      LoginUsecaseParams(
+        username: _usernameController.text,
+        password: _passwordController.text,
+      ),
+    );
+
+    setState(() => _isLoading = false);
+
+    result.fold(
+      (failure) => ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(failure.message)),
+      ),
+      (user) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login successful!")),
+        );
+        Navigator.pushReplacementNamed(context, '/dashboard');
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,7 +65,7 @@ class LoginScreen extends StatelessWidget {
             ),
             Positioned.fill(
               child: Container(
-                color: Color.fromRGBO(0, 0, 0, 0.5),
+                color: const Color.fromRGBO(0, 0, 0, 0.5),
               ),
             ),
             Center(
@@ -34,90 +76,114 @@ class LoginScreen extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(31, 235, 228, 228),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [
-                      BoxShadow(color: Colors.white)
-                    ],
+                    boxShadow: const [BoxShadow(color: Colors.white)],
                   ),
-                  child: Column(
-                    children: [
-                      const Text(
-                        "Welcome back!!",
-                        style: TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.blueAccent,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        "Login",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.blueAccent,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        decoration: InputDecoration(
-                          labelText: "Email",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TextField(
-                        obscureText: true,
-                        decoration: InputDecoration(
-                          labelText: "Password",
-                          border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: ElevatedButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/dashboard'),
-                          child: const Text("Login"),
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/register'),
-                          child: const Text(
-                            "Forgot Password?",
-                            style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.blueAccent,
-                                fontWeight: FontWeight.bold),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Welcome back!!",
+                          style: TextStyle(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.blueAccent,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 15),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Don't have an account?",
-                              style: TextStyle(fontSize: 16)),
-                          TextButton(
+                        const SizedBox(height: 8),
+                        const Text(
+                          "Login",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.blueAccent,
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Username / Email
+                        TextFormField(
+                          controller: _usernameController,
+                          decoration: InputDecoration(
+                            labelText: "Email or Username",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Email/Username is required"
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Password
+                        TextFormField(
+                          controller: _passwordController,
+                          obscureText: true,
+                          decoration: InputDecoration(
+                            labelText: "Password",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) => value == null || value.isEmpty
+                              ? "Password is required"
+                              : null,
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Login button
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton(
+                            onPressed: _isLoading ? null : _login,
+                            child: _isLoading
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white)
+                                : const Text("Login"),
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Forgot password
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
                             onPressed: () =>
                                 Navigator.pushNamed(context, '/register'),
                             child: const Text(
-                              "Register",
+                              "Forgot Password?",
                               style: TextStyle(
                                   fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent),
+                                  color: Colors.blueAccent,
+                                  fontWeight: FontWeight.bold),
                             ),
-                          )
-                        ],
-                      )
-                    ],
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+
+                        // Register redirect
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("Don't have an account?",
+                                style: TextStyle(fontSize: 16)),
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.pushReplacementNamed(
+                                      context, '/register'),
+                              child: const Text(
+                                "Register",
+                                style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.blueAccent),
+                              ),
+                            )
+                          ],
+                        )
+                      ],
+                    ),
                   ),
                 ),
               ),
