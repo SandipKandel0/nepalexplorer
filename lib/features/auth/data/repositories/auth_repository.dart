@@ -7,7 +7,7 @@ import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
 import 'package:nepalexplorer/features/auth/domain/repositories/auth_repository.dart';
 
-final authrepositoryProvider = Provider<IAuthRepository>((ref){
+final authRepositoryProvider = Provider<IAuthRepository>((ref){
   return AuthRepository(authDatssource:ref.read(authLocalDatasourceProvider));
 });
 
