@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nepalexplorer/features/auth/domain/usecases/login_usecase.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
+import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
+
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,28 +21,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    final loginUsecase = ref.read(loginUsecaseProvider);
-
-    final result = await loginUsecase(
-      LoginUsecaseParams(
-        username: _usernameController.text,
-        password: _passwordController.text,
-      ),
+    // Use HiveAuthStorage
+    final success = await HiveAuthStorage.login(
+      _usernameController.text.trim(),
+      _passwordController.text.trim(),
     );
 
     setState(() => _isLoading = false);
 
-    result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(failure.message)),
-      ),
-      (user) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login successful!")),
-        );
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      },
-    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login successful!")),
+      );
+      Navigator.pushReplacementNamed(context, '/dashboard'); // Change to your dashboard route
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid username/email or password")),
+      );
+    }
   }
 
   @override
@@ -64,9 +60,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
             Positioned.fill(
-              child: Container(
-                color: const Color.fromRGBO(0, 0, 0, 0.5),
-              ),
+              child: Container(color: const Color.fromRGBO(0, 0, 0, 0.5)),
             ),
             Center(
               child: SingleChildScrollView(
@@ -74,16 +68,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   width: containerWidth,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(31, 235, 228, 228),
+                    color: const Color.fromARGB(31, 251, 251, 251),
                     borderRadius: BorderRadius.circular(20),
-                    boxShadow: const [BoxShadow(color: Colors.white)],
+                    boxShadow: const [
+                      BoxShadow(color: Colors.white),
+                    ],
                   ),
                   child: Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         const Text(
-                          "Welcome back!!",
+                          "Welcome Back!",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -92,15 +88,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Login",
+                          "Login to your account",
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.blueAccent,
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // Username / Email
                         TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(
@@ -110,12 +104,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             ),
                           ),
                           validator: (value) => value == null || value.isEmpty
-                              ? "Email/Username is required"
+                              ? "Email or Username is required"
                               : null,
                         ),
                         const SizedBox(height: 20),
-
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: true,
@@ -129,9 +121,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ? "Password is required"
                               : null,
                         ),
-                        const SizedBox(height: 20),
-
-                        // Login button
+                        const SizedBox(height: 25),
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -139,13 +129,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             onPressed: _isLoading ? null : _login,
                             child: _isLoading
                                 ? const CircularProgressIndicator(
-                                    color: Colors.white)
-                                : const Text("Login"),
+                                    color: Colors.white,
+                                  )
+                                : const Text(
+                                    "Login",
+                                    style: TextStyle(fontSize: 18),
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 20),
-
-                        // Forgot password
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -154,20 +146,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: const Text(
                               "Forgot Password?",
                               style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.blueAccent,
-                                  fontWeight: FontWeight.bold),
+                                fontSize: 16,
+                                color: Colors.blueAccent,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),
                         const SizedBox(height: 15),
-
-                        // Register redirect
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text("Don't have an account?",
-                                style: TextStyle(fontSize: 16)),
+                            const Text(
+                              "Don't have an account?",
+                              style: TextStyle(fontSize: 16),
+                            ),
                             TextButton(
                               onPressed: () =>
                                   Navigator.pushReplacementNamed(
@@ -175,11 +168,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               child: const Text(
                                 "Register",
                                 style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blueAccent),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blueAccent,
+                                ),
                               ),
-                            )
+                            ),
                           ],
                         )
                       ],

@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nepalexplorer/features/auth/domain/usecases/register_usecase.dart';
+import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
+import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 
-class RegisterScreen extends ConsumerStatefulWidget {
+class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
+  State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _fullNameController = TextEditingController();
@@ -33,33 +33,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final registerUsecase = ref.read(registerUsecaseProvider);
-
-    final result = await registerUsecase(
-      RegisterUsecaseParams(
-        fullName: _fullNameController.text,
-        email: _emailController.text,
-        phoneNumber: _phoneController.text,
-        username: _usernameController.text,
-        password: _passwordController.text,
+    final success = await HiveAuthStorage.register(
+      AuthHiveModel(
+        authId: '',
+        fullName: _fullNameController.text.trim(),
+        email: _emailController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        username: _usernameController.text.trim(),
+        password: _passwordController.text.trim(),
       ),
     );
 
     setState(() => _isLoading = false);
 
-    result.fold(
-      (failure) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(failure.message)),
-      ),
-      (success) {
-        if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Registration successful!")),
-          );
-          Navigator.pushReplacementNamed(context, '/login');
-        }
-      },
-    );
+    if (success) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration successful!")),
+      );
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration failed: Email already exists")),
+      );
+    }
   }
 
   @override
@@ -102,8 +98,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         style: TextStyle(fontSize: 18, color: Colors.blueAccent),
                       ),
                       const SizedBox(height: 20),
-
-                      // Full Name
                       TextFormField(
                         controller: _fullNameController,
                         decoration: InputDecoration(
@@ -116,8 +110,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             value == null || value.isEmpty ? "Full Name is required" : null,
                       ),
                       const SizedBox(height: 20),
-
-                      // Mobile Number
                       TextFormField(
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
@@ -129,8 +121,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Email
                       TextFormField(
                         controller: _emailController,
                         keyboardType: TextInputType.emailAddress,
@@ -147,8 +137,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         },
                       ),
                       const SizedBox(height: 20),
-
-                      // Username
                       TextFormField(
                         controller: _usernameController,
                         decoration: InputDecoration(
@@ -161,8 +149,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             value == null || value.isEmpty ? "Username is required" : null,
                       ),
                       const SizedBox(height: 20),
-
-                      // Password
                       TextFormField(
                         controller: _passwordController,
                         obscureText: true,
@@ -176,8 +162,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             value == null || value.isEmpty ? "Password is required" : null,
                       ),
                       const SizedBox(height: 20),
-
-                      // Confirm Password
                       TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: true,
@@ -191,8 +175,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             value == null || value.isEmpty ? "Confirm your password" : null,
                       ),
                       const SizedBox(height: 25),
-
-                      // Register Button
                       SizedBox(
                         width: double.infinity,
                         height: 50,
@@ -204,8 +186,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Login redirect
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

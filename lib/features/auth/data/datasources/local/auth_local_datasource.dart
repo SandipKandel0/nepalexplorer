@@ -38,7 +38,7 @@ class AuthLocalDatasource implements IAuthDatasource {
     }
   }
 
-  /// CHECK IF EMAIL EXISTS (converted to Future)
+
 @override
 Future<bool> isEmailExists(String email) async {
   try {

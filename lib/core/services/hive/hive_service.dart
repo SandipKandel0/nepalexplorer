@@ -5,12 +5,8 @@ class HiveAuthService {
   static const String _authBoxName = 'authBox';
   late Box<AuthHiveModel> _authBox;
 
-  // Initialize Hive and open the box
+  // Initialize box 
   Future<void> init() async {
-    await Hive.initFlutter();
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(AuthHiveModelAdapter());
-    }
     _authBox = await Hive.openBox<AuthHiveModel>(_authBoxName);
   }
 
@@ -26,9 +22,9 @@ class HiveAuthService {
   // Login user
   Future<AuthHiveModel?> login(String email, String password) async {
     final user = _authBox.values.cast<AuthHiveModel?>().firstWhere(
-          (u) => u?.email == email && u?.password == password,
-          orElse: () => null,
-        );
+      (u) => u?.email == email && u?.password == password,
+      orElse: () => null,
+    );
 
     if (user != null) {
       await _authBox.put('currentUser', user);
@@ -43,7 +39,7 @@ class HiveAuthService {
   // Get currently logged-in user
   AuthHiveModel? getCurrentUser() => _authBox.get('currentUser');
 
-  // ✅ Check if email exists
+  // Check if email exists
   bool isEmailExists(String email) {
     return _authBox.values.any((u) => u.email == email);
   }
