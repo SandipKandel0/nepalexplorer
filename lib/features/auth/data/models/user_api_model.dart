@@ -1,13 +1,13 @@
-import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
+import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
 
 class UserApiModel {
-  final String? id; // nullable
+  final String? id; // corresponds to authId in entity
   final String fullName;
   final String email;
   final String? phoneNumber;
   final String username;
-  final String? role; // nullable
   final String? password;
+  final String? role; // optional, for API purposes
 
   UserApiModel({
     this.id,
@@ -15,10 +15,11 @@ class UserApiModel {
     required this.email,
     this.phoneNumber,
     required this.username,
-    this.role,
     this.password,
+    this.role,
   });
 
+  // From JSON (API response)
   factory UserApiModel.fromJson(Map<String, dynamic> json) {
     return UserApiModel(
       id: json['id'] as String?,
@@ -26,11 +27,12 @@ class UserApiModel {
       email: json['email'] as String,
       phoneNumber: json['phoneNumber'] as String?,
       username: json['username'] as String,
-      role: json['role'] as String?,
       password: json['password'] as String?,
+      role: json['role'] as String?,
     );
   }
 
+  // To JSON (for API request)
   Map<String, dynamic> toJson() {
     return {
       "id": id,
@@ -38,9 +40,42 @@ class UserApiModel {
       "email": email,
       "phoneNumber": phoneNumber,
       "username": username,
-      "role": role,
       "password": password,
+      "role": role,
     };
   }
-}
 
+  // Convert API model to entity
+  AuthEntity toEntity() {
+    return AuthEntity(
+      authId: id,
+      fullName: fullName,
+      email: email,
+      phoneNumber: phoneNumber,
+      username: username,
+      password: password,
+    );
+  }
+
+  // Create API model from entity
+  factory UserApiModel.fromEntity(AuthEntity entity) {
+    return UserApiModel(
+      id: entity.authId,
+      fullName: entity.fullName,
+      email: entity.email,
+      phoneNumber: entity.phoneNumber,
+      username: entity.username,
+      password: entity.password,
+    );
+  }
+
+  // Convert list of API models to list of entities
+  static List<AuthEntity> toEntityList(List<UserApiModel> models) {
+    return models.map((e) => e.toEntity()).toList();
+  }
+
+  // Convert list of entities to list of API models
+  static List<UserApiModel> fromEntityList(List<AuthEntity> entities) {
+    return entities.map((e) => UserApiModel.fromEntity(e)).toList();
+  }
+}

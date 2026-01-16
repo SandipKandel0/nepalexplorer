@@ -66,10 +66,8 @@ class ApiClient {
   }
 
   Dio get dio => _dio;
-
-  // ==============================
   // Basic HTTP Requests
-  // ==============================
+ 
   Future<Response> get(String path,
           {Map<String, dynamic>? queryParameters, Options? options}) =>
       _dio.get(path, queryParameters: queryParameters, options: options);
@@ -91,9 +89,8 @@ class ApiClient {
       _dio.post(path, data: formData, options: options, onSendProgress: onSendProgress);
 }
 
-// ==============================
 // Auth Interceptor
-// ==============================
+
 class _AuthInterceptor extends Interceptor {
   final _storage = const FlutterSecureStorage();
   static const String _tokenKey = 'auth_token';
