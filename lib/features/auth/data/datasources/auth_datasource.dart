@@ -14,7 +14,7 @@ abstract interface class IAuthLocalDatasource{
   Future<bool> isUsernameExists(String username);
   Future<bool> isPhoneExists(String phoneNumber);
 }
-abstract interface class IAuthRemoteDatasource{
+abstract interface class IAuthRemoteDatasource{ 
   Future<UserApiModel?> register(UserApiModel user);
   Future<UserApiModel?> login(String email, String password);
   Future<bool> logout();

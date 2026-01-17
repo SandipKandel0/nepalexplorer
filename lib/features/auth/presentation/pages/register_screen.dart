@@ -1,15 +1,18 @@
-import 'package:flutter/material.dart';
-import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
-import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 
-class RegisterScreen extends StatefulWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasources.dart';
+import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
+
+class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
 
   @override
-  State<RegisterScreen> createState() => _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _fullNameController = TextEditingController();
@@ -33,27 +36,35 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await HiveAuthStorage.register(
-      AuthHiveModel(
-        authId: '',
+    try {
+      final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
+
+      final newUser = UserApiModel(
         fullName: _fullNameController.text.trim(),
         email: _emailController.text.trim(),
         phoneNumber: _phoneController.text.trim(),
         username: _usernameController.text.trim(),
         password: _passwordController.text.trim(),
-      ),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration successful!")),
       );
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
+
+      final registeredUser = await authRemoteDatasource.register(newUser);
+
+      setState(() => _isLoading = false);
+
+      if (registeredUser != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration successful!")),
+        );
+        Navigator.pushReplacementNamed(context, '/login');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration failed. Please try again.")),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration failed: Email already exists")),
+        SnackBar(content: Text("Error: $e")),
       );
     }
   }
@@ -186,23 +197,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Text("Already have an account?", style: TextStyle(fontSize: 16)),
-                          TextButton(
-                            onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                            child: const Text(
-                              "Login",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.blueAccent,
+                    Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Flexible(
+                              child: Text(
+                                "Already have an account?",
+                                style: TextStyle(fontSize: 16),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
-                          ),
-                        ],
-                      )
+                            TextButton(
+                              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
+                              child: const Text(
+                                "Login",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.blueAccent,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+
                     ],
                   ),
                 ),

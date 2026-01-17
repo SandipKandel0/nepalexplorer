@@ -46,7 +46,11 @@ class HiveAuthService {
     return _authBox.values.any((u) => u.email == email);
   }
 
-  FutureOr<bool>? isPhoneExists(String phoneNumber) {}
+  FutureOr<bool>? isPhoneExists(String phoneNumber) {
+    return null;
+  }
 
-  FutureOr<bool>? isUsernameExists(String username) {}
+  FutureOr<bool>? isUsernameExists(String username) {
+    return null;
+  }
 }

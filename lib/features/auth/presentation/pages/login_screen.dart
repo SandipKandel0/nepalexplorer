@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
+import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasources.dart';
+import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -21,22 +23,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Use HiveAuthStorage
-    final success = await HiveAuthStorage.login(
-      _usernameController.text.trim(),
-      _passwordController.text.trim(),
-    );
+    try {
+      // Get the remote datasource
+      final authRemote = ref.read(authRemoteDatasourceProvider);
 
-    setState(() => _isLoading = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login successful!")),
+      // Call login API
+      final UserApiModel? user = await authRemote.login(
+        _usernameController.text.trim(),
+        _passwordController.text.trim(),
       );
-      Navigator.pushReplacementNamed(context, '/dashboard'); // Change to your dashboard route
-    } else {
+
+      setState(() => _isLoading = false);
+
+      if (user != null) {
+        // Login successful
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login successful!")),
+        );
+
+        // Navigate to home page
+        Navigator.pushReplacementNamed(context, '/home');
+      } else {
+        // Login failed
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Invalid username/email or password")),
+        );
+      }
+    } catch (e) {
+      setState(() => _isLoading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid username/email or password")),
+        SnackBar(content: Text("Login failed: $e")),
       );
     }
   }
