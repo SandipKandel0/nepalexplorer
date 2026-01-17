@@ -1,9 +1,24 @@
-
+// lib/features/auth/data/datasources/auth_remote_datasource.dart
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nepalexplorer/core/api/api_client.dart';
-import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/auth_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/models/user_api_model.dart';
+
+
+/// Provider for AuthRemoteDatasource
+final authRemoteDatasourceProvider = Provider<IAuthRemoteDatasource>((ref) {
+  // Read dependencies from other providers
+  final apiClient = ref.read(apiClientProvider);
+  final userSessionService = ref.read(userSessionServiceProvider);
+
+  // Return the datasource instance
+  return AuthRemoteDatasource(
+    apiClient: apiClient,
+    userSessionService: userSessionService,
+  );
+});
 
 class AuthRemoteDatasource implements IAuthRemoteDatasource {
   final ApiClient _apiClient;
@@ -19,7 +34,6 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
   Future<UserApiModel?> register(UserApiModel user) async {
     final response = await _apiClient.post(ApiEndpoints.register, data: user.toJson());
     if (response.data["success"] != true) return null;
-
     return UserApiModel.fromJson(response.data["data"]);
   }
 
@@ -33,11 +47,11 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
 
     final user = UserApiModel.fromJson(response.data["data"]);
 
-    // Store session
+    // Store user session
     await _userSessionService.storeUserSession(
       userId: user.id!,
       email: user.email,
-      role: user.role!,
+      role: user.role ?? "",
       fullName: user.fullName,
     );
 
@@ -57,7 +71,6 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
   Future<UserApiModel?> getCurrentUser(String userId) async {
     final response = await _apiClient.get(ApiEndpoints.userById(userId));
     if (response.data["success"] != true) return null;
-
     return UserApiModel.fromJson(response.data["data"]);
   }
 
