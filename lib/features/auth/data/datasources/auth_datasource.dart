@@ -1,7 +1,7 @@
 // import 'package:dartz/dartz.dart';
 // import 'package:nepalexplorer/core/error/failures.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
-import 'package:nepalexplorer/features/auth/data/models/user_api_model.dart';
+import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 // import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
 
 abstract interface class IAuthLocalDatasource{
@@ -23,4 +23,4 @@ abstract interface class IAuthRemoteDatasource{
   Future<bool> isEmailExists(String email);
   Future<bool> isUsernameExists(String username);
   Future<bool> isPhoneExists(String phoneNumber);
-}
+} 

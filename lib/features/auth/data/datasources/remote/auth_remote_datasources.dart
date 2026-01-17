@@ -4,7 +4,7 @@ import 'package:nepalexplorer/core/api/api_client.dart';
 import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
 import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/auth_datasource.dart';
-import 'package:nepalexplorer/features/auth/data/models/user_api_model.dart';
+import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 
 
 /// Provider for AuthRemoteDatasource
@@ -32,9 +32,15 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
 
   @override
   Future<UserApiModel?> register(UserApiModel user) async {
-    final response = await _apiClient.post(ApiEndpoints.register, data: user.toJson());
-    if (response.data["success"] != true) return null;
-    return UserApiModel.fromJson(response.data["data"]);
+    final response = await _apiClient.post(
+    ApiEndpoints.register,
+    data: user.toJson());
+    if (response.data['success'] == true){
+      final data = response.data['data'] as Map<String, dynamic>;
+      final registeredUser = UserApiModel.fromJson(data);
+      return registeredUser;
+    }
+    return user;
   }
 
   @override
