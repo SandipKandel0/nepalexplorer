@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 
@@ -43,4 +45,8 @@ class HiveAuthService {
   bool isEmailExists(String email) {
     return _authBox.values.any((u) => u.email == email);
   }
+
+  FutureOr<bool>? isPhoneExists(String phoneNumber) {}
+
+  FutureOr<bool>? isUsernameExists(String username) {}
 }

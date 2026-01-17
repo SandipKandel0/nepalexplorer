@@ -1,13 +1,13 @@
 import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
 
 class UserApiModel {
-  final String? id; // corresponds to authId in entity
+  final String? id; 
   final String fullName;
   final String email;
   final String? phoneNumber;
   final String username;
   final String? password;
-  final String? role; // optional, for API purposes
+  final String? role; 
 
   UserApiModel({
     this.id,

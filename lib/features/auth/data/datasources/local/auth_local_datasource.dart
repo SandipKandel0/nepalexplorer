@@ -68,4 +68,22 @@ Future<AuthHiveModel?> getCurrentUser() async {
     return null;
   }
 }
+ @override
+  Future<bool> isPhoneExists(String phoneNumber) async {
+    try {
+      return Future.value(_hiveAuthService.isPhoneExists(phoneNumber));
+    } catch (_) {
+      return false;
+    }
+  }
+    /// CHECK USERNAME EXISTS
+  @override
+  Future<bool> isUsernameExists(String username) async {
+    try {
+      return Future.value(_hiveAuthService.isUsernameExists(username));
+    } catch (_) {
+      return false;
+    }
+  }
+  
 }
