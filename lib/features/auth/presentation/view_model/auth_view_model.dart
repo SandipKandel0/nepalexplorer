@@ -25,6 +25,7 @@ Future<void> register({
   String? phoneNumber,
   required String username,
   required String password,
+  required String role,
 }) async {
   state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
 
@@ -34,6 +35,7 @@ Future<void> register({
     phoneNumber: phoneNumber,
     username: username,
     password: password,
+    role: role,
   );
 
   final result = await _registerUsecase(params);
@@ -59,7 +61,10 @@ Future<void> register({
     required String username,
     required String password,
   }) async {
-    state = state.copyWith(status: AuthStatus.loading,);
+    state = state.copyWith(
+    status: AuthStatus.loading,
+    errorMessage: null,
+    );
 
     final params = LoginUsecaseParams(username: username, password: password);
     final result = await _loginUsecase(params);

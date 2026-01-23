@@ -3,62 +3,60 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+// Provider for guide login view model
+final guideViewModelProvider = ChangeNotifierProvider((ref) => GuideViewModel());
 
-  @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
+class GuideViewModel extends ChangeNotifier {
+  bool isLoading = false;
+  String? errorMessage;
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  bool _isLoading = false;
-
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() => _isLoading = true);
+  Future<bool> login(String email, String password) async {
+    isLoading = true;
+    notifyListeners();
 
     try {
-      final email = _usernameController.text.trim();
-      final password = _passwordController.text.trim();
-
       final response = await http.post(
-        Uri.parse('http://localhost:3000/auth/login'),
+        Uri.parse('http://localhost:3000/auth/loginGuide'), // backend guide login
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );
 
       final data = jsonDecode(response.body);
 
-      setState(() => _isLoading = false);
+      isLoading = false;
+      notifyListeners();
 
       if (response.statusCode == 200 && data['success'] == true) {
-        final role = data['data']['role'];
-
-        if (role == 'guide') {
-          Navigator.pushReplacementNamed(context, '/guide_home');
-        } else {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
+        return true; // login success
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Login failed')),
-        );
+        errorMessage = data['message'] ?? 'Login failed';
+        return false;
       }
     } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: $e")),
-      );
+      isLoading = false;
+      errorMessage = 'Something went wrong';
+      notifyListeners();
+      return false;
     }
   }
+}
+
+class GuideLoginPage extends ConsumerStatefulWidget {
+  const GuideLoginPage({super.key});
+
+  @override
+  ConsumerState<GuideLoginPage> createState() => _GuideLoginPageState();
+}
+
+class _GuideLoginPageState extends ConsumerState<GuideLoginPage> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = ref.watch(guideViewModelProvider);
+
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final containerWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
@@ -95,7 +93,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     child: Column(
                       children: [
                         const Text(
-                          "Welcome Back!",
+                          "Welcome Guide!",
                           style: TextStyle(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -104,7 +102,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          "Login to your account",
+                          "Login to your guide account",
                           style: TextStyle(
                             fontSize: 18,
                             color: Colors.blueAccent,
@@ -112,16 +110,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           decoration: InputDecoration(
                             labelText: "Email",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? "Email is required"
-                              : null,
+                          validator: (value) =>
+                              value == null || value.isEmpty ? "Enter email" : null,
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -133,36 +130,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? "Password is required"
-                              : null,
+                          validator: (value) =>
+                              value == null || value.isEmpty ? "Enter password" : null,
                         ),
                         const SizedBox(height: 25),
                         SizedBox(
                           width: double.infinity,
                           height: 50,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            child: _isLoading
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    "Login",
-                                    style: TextStyle(fontSize: 18),
-                                  ),
-                          ),
+                          child: viewModel.isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : ElevatedButton(
+                                  onPressed: () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      final success = await viewModel.login(
+                                        _emailController.text.trim(),
+                                        _passwordController.text.trim(),
+                                      );
+                                      if (success) {
+                                        Navigator.pushReplacementNamed(
+                                            context, '/guide_dashboard');
+                                      } else {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                viewModel.errorMessage ?? "Login failed"),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  },
+                                  child: const Text("Login"),
+                                ),
                         ),
                         const SizedBox(height: 20),
-                        TextButton(
-                          onPressed: () =>
-                              Navigator.pushNamed(context, '/guide_login'),
-                          child: const Text(
-                            "Login as Guide",
-                            style: TextStyle(
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () {}, // implement forgot password later
+                            child: const Text(
+                              "Forgot Password?",
+                              style: TextStyle(
                                 fontSize: 16,
+                                color: Colors.blueAccent,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.blueAccent),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 15),
@@ -174,9 +186,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               style: TextStyle(fontSize: 16),
                             ),
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.pushReplacementNamed(
-                                      context, '/register'),
+                              onPressed: () => Navigator.pushReplacementNamed(
+                                  context, '/register'),
                               child: const Text(
                                 "Register",
                                 style: TextStyle(

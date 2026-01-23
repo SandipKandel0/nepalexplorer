@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasources.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 
@@ -23,6 +21,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isGuide = false; // new role toggle
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -45,6 +44,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         phoneNumber: _phoneController.text.trim(),
         username: _usernameController.text.trim(),
         password: _passwordController.text.trim(),
+        role: _isGuide ? 'guide' : 'user', // assign role dynamically
       );
 
       final registeredUser = await authRemoteDatasource.register(newUser);
@@ -55,7 +55,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registration successful!")),
         );
-        Navigator.pushReplacementNamed(context, '/login');
+        if (_isGuide) {
+          Navigator.pushReplacementNamed(context, '/guide_login');
+        } else {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registration failed. Please try again.")),
@@ -185,6 +189,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         validator: (value) =>
                             value == null || value.isEmpty ? "Confirm your password" : null,
                       ),
+                      const SizedBox(height: 20),
+
+                      // ROLE TOGGLE SWITCH
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Register as Guide"),
+                          Switch(
+                            value: _isGuide,
+                            onChanged: (val) {
+                              setState(() {
+                                _isGuide = val;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+
                       const SizedBox(height: 25),
                       SizedBox(
                         width: double.infinity,
@@ -197,30 +219,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         ),
                       ),
                       const SizedBox(height: 20),
-                    Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Flexible(
-                              child: Text(
-                                "Already have an account?",
-                                style: TextStyle(fontSize: 16),
-                                overflow: TextOverflow.ellipsis,
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Flexible(
+                            child: Text(
+                              "Already have an account?",
+                              style: TextStyle(fontSize: 16),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () =>
+                                Navigator.pushReplacementNamed(context, '/login'),
+                            child: const Text(
+                              "Login",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
                               ),
                             ),
-                            TextButton(
-                              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                              child: const Text(
-                                "Login",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.blueAccent,
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-
+                          ),
+                        ],
+                      )
                     ],
                   ),
                 ),

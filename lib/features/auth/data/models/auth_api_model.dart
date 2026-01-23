@@ -1,13 +1,12 @@
 import 'package:nepalexplorer/features/auth/domain/entities/auth_entity.dart';
-
 class UserApiModel {
-  final String? id; 
+  final String? id;
   final String fullName;
   final String email;
   final String? phoneNumber;
   final String username;
   final String? password;
-  final String? role; 
+  final String role; // ✅ role is required
 
   UserApiModel({
     this.id,
@@ -16,19 +15,19 @@ class UserApiModel {
     this.phoneNumber,
     required this.username,
     this.password,
-    this.role,
+    required this.role, // ✅ required
   });
 
   // From JSON (API response)
   factory UserApiModel.fromJson(Map<String, dynamic> json) {
     return UserApiModel(
-      id: json['_id'] as String?, 
+      id: json['_id'] as String?,
       fullName: json['fullName'] as String,
       email: json['email'] as String,
       phoneNumber: json['phoneNumber'] as String?,
       username: json['username'] as String,
       password: json['password'] as String?,
-      role: json['role'] as String?,
+      role: json['role'] as String? ?? 'user', // default to 'user' if null
     );
   }
 
@@ -54,6 +53,7 @@ class UserApiModel {
       phoneNumber: phoneNumber,
       username: username,
       password: password,
+      role: role, // ✅ include role
     );
   }
 
@@ -66,6 +66,7 @@ class UserApiModel {
       phoneNumber: entity.phoneNumber,
       username: entity.username,
       password: entity.password,
+      role: entity.role, // ✅ include role
     );
   }
 

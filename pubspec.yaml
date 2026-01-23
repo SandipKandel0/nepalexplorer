@@ -47,6 +47,7 @@ dependencies:
   dio: ^5.4.1
   dio_smart_retry: ^7.0.1
   connectivity_plus: ^6.0.5
+  provider: ^6.0.0
 
   flutter_secure_storage: ^9.2.2
   shared_preferences: ^2.3.2

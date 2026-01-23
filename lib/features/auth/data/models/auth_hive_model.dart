@@ -24,6 +24,9 @@ class AuthHiveModel extends HiveObject {
   @HiveField(5)
   final String? password;
 
+  @HiveField(6)
+  final String role;
+
   AuthHiveModel({
     String? authId,
     required this.fullName,
@@ -31,17 +34,19 @@ class AuthHiveModel extends HiveObject {
     this.phoneNumber,
     required this.username,
     this.password,
-  }) : authId = authId ?? Uuid().v4();
+    required this.role,
+  }) : authId = authId ?? const Uuid().v4();
 
   // Create HiveModel from Entity
   factory AuthHiveModel.fromEntity(AuthEntity entity) {
     return AuthHiveModel(
-      authId: entity.authId ?? Uuid().v4(),  // Fixed: remove const
+      authId: entity.authId ?? const Uuid().v4(),
       fullName: entity.fullName,
       email: entity.email,
       phoneNumber: entity.phoneNumber,
       username: entity.username,
       password: entity.password,
+      role: entity.role,
     );
   }
 
@@ -54,6 +59,7 @@ class AuthHiveModel extends HiveObject {
       phoneNumber: phoneNumber,
       username: username,
       password: password,
+      role: role,
     );
   }
 

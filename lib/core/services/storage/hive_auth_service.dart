@@ -21,24 +21,28 @@ class HiveAuthStorage {
     return sha256.convert(utf8.encode(password)).toString();
   }
 
-  /// Register user
-  static Future<bool> register(AuthHiveModel user) async {
-    final exists = _authBox.values.any((u) => u.email == user.email);
-    if (exists) return false;
-    final newUser = AuthHiveModel(
-      authId: DateTime.now().millisecondsSinceEpoch.toString(),
-      fullName: user.fullName,
-      email: user.email,
-      phoneNumber: user.phoneNumber,
-      username: user.username,
-      password: _hashPassword(user.password ?? ''),
-    );
+// Register user
+static Future<bool> register(AuthHiveModel user) async {
+  
+  final exists = _authBox.values.any((u) => u.email == user.email);
+  if (exists) return false;
 
-    await _authBox.put(newUser.authId, newUser);
-    return true;
-  }
+  final newUser = AuthHiveModel(
+    authId: DateTime.now().millisecondsSinceEpoch.toString(),
+    fullName: user.fullName,
+    email: user.email,
+    phoneNumber: user.phoneNumber,
+    username: user.username,
+    password: _hashPassword(user.password ?? ''),
+    role: user.role,
+  );
 
-  /// Login user
+  await _authBox.put(newUser.authId, newUser);
+  return true;
+}
+
+
+  // Login user
   static Future<bool> login(String email, String password) async {
     final hashedPassword = _hashPassword(password);
 
@@ -55,6 +59,7 @@ class HiveAuthStorage {
         phoneNumber: user.phoneNumber,
         username: user.username,
         password: user.password,
+        role: user.role,
       ));
       return true;
     }

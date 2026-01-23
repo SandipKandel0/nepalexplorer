@@ -43,17 +43,18 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
     return user;
   }
 
-  @override
-  Future<UserApiModel?> login(String email, String password) async {
+@override
+Future<UserApiModel?> login(String email, String password) async {
+  try {
     final response = await _apiClient.post(
       ApiEndpoints.login,
-      data: {"email": email, "password": password},
+      data: {"email": email.trim(), "password": password},
     );
-    if (response.data["success"] != true) return null;
+
+    if (response.data["success"] != true || response.data["data"] == null) return null;
 
     final user = UserApiModel.fromJson(response.data["data"]);
 
-    // Store user session
     await _userSessionService.storeUserSession(
       userId: user.id!,
       email: user.email,
@@ -62,7 +63,13 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
     );
 
     return user;
+  } catch (e) {
+    // You can log error or show a message
+    print("Login error: $e");
+    return null;
   }
+}
+
 
   @override
   Future<bool> logout() async {

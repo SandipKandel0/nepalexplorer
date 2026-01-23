@@ -7,12 +7,14 @@ import 'package:nepalexplorer/features/auth/data/repositories/auth_repository.da
 import '../entities/auth_entity.dart';
 import '../repositories/auth_repository.dart';
 
+/// ✅ Parameters for registration use case
 class RegisterUsecaseParams extends Equatable {
   final String fullName;
   final String email;
   final String? phoneNumber;
   final String username;
   final String password;
+  final String role; // <-- user role: "user" or "guide"
 
   const RegisterUsecaseParams({
     required this.fullName,
@@ -20,18 +22,20 @@ class RegisterUsecaseParams extends Equatable {
     required this.phoneNumber,
     required this.username,
     required this.password,
+    required this.role,
   });
 
   @override
-  List<Object?> get props => [fullName, email, phoneNumber, username, password];
+  List<Object?> get props => [fullName, email, phoneNumber, username, password, role];
 }
 
-// Provider
+/// ✅ Riverpod provider for RegisterUsecase
 final registerUsecaseProvider = Provider<RegisterUsecase>((ref) {
   final authRepository = ref.read(authRepositoryProvider);
   return RegisterUsecase(authRepository: authRepository);
 });
 
+/// ✅ Use case for registering a new user
 class RegisterUsecase implements UsecaseWithParams<bool, RegisterUsecaseParams> {
   final IAuthRepository _authRepository;
 
@@ -40,13 +44,17 @@ class RegisterUsecase implements UsecaseWithParams<bool, RegisterUsecaseParams> 
 
   @override
   Future<Either<Failure, bool>> call(RegisterUsecaseParams params) {
+    // Create AuthEntity including the role
     final entity = AuthEntity(
       fullName: params.fullName,
       email: params.email,
       phoneNumber: params.phoneNumber,
       username: params.username,
       password: params.password,
+      role: params.role, // <-- role is passed here
     );
+
+    // Call the repository to register
     return _authRepository.register(entity);
   }
 }
