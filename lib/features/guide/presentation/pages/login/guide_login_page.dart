@@ -16,7 +16,7 @@ class GuideViewModel extends ChangeNotifier {
 
     try {
       final response = await http.post(
-        Uri.parse('http://localhost:3000/auth/loginGuide'), // backend guide login
+        Uri.parse('http://localhost:3000/api/auth/loginGuide'), // backend guide login
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),
       );

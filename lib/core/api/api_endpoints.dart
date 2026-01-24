@@ -25,7 +25,8 @@ class ApiEndpoints {
   static String checkPhoneExists(String phone) => '$baseUrl/users/phone/$phone';
 
   // GUIDE
-  static const String guides = '$baseUrl/guides';
+  static const String guideLogin = '$baseUrl/auth/loginGuide';  // Guide login
+  static const String guideProfile = '$baseUrl/guides/profile'; // Guide profile
   static String guideById(String id) => '$baseUrl/guides/$id';
   static String guidesByDestination(String destId) =>
       '$baseUrl/guides/destination/$destId';

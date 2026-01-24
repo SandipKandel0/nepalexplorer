@@ -11,35 +11,40 @@ class GuideViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
-  Future<bool> login(String email, String password) async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
+Future<bool> login(String email, String password) async {
+  isLoading = true;
+  errorMessage = null;
+  notifyListeners();
 
-    try {
-      final api = _ref.read(guideRemoteDatasourceProvider);
-      final response = await api.login(email, password);
+  try {
+    final api = _ref.read(guideRemoteDatasourceProvider);
+    final response = await api.login(email, password);
 
-      if (response['success'] == true &&
-          response['data'] != null &&
-          response['data']['role'] == 'guide') {
-        isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        errorMessage = response['message'] ?? "Invalid credentials or not a guide";
-        isLoading = false;
-        notifyListeners();
-        return false;
-      }
-    } catch (e) {
-      errorMessage = "Something went wrong: ${e.toString()}";
+    if (response['success'] == true &&
+        response['data'] != null &&
+        response['data']['role'] == 'guide') {
+
+      final token = response['token'];
+
+      // SAVE TOKEN (example using shared preferences)
+      // await _ref.read(authLocalDatasourceProvider).saveToken(token);
+
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } else {
+      errorMessage = response['message'] ?? "Invalid credentials";
       isLoading = false;
       notifyListeners();
       return false;
     }
+  } catch (e) {
+    errorMessage = e.toString(); // 🔥 show real error
+    isLoading = false;
+    notifyListeners();
+    return false;
   }
-
+}
   // Optional: fetch guide profile
   Future<Map<String, dynamic>?> getProfile(String token) async {
     try {
