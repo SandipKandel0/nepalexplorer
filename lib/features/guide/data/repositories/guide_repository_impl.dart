@@ -8,8 +8,13 @@ import '../models/guide_model.dart';
 class GuideRepositoryImpl implements GuideRepository {
   final GuideRemoteDatasource remote;
   final GuideLocalDataSource local;
+  final String token; // JWT token
 
-  GuideRepositoryImpl({required this.remote, required this.local});
+  GuideRepositoryImpl({
+    required this.remote,
+    required this.local,
+    required this.token, // Pass token when creating repository
+  });
 
   @override
   Future<GuideEntity> getGuideProfile(String authId) async {
@@ -18,12 +23,9 @@ class GuideRepositoryImpl implements GuideRepository {
     if (localData != null) return localData;
 
     // 2️⃣ Fetch from remote
-    final remoteDataJson = await remote.getGuideProfile(authId); // Map<String, dynamic>
+    final remoteData = await remote.getGuideProfile(token);
 
-    // 3️⃣ Convert JSON to GuideModel
-    final remoteData = GuideModel.fromJson(remoteDataJson);
-
-    // 4️⃣ Save to local cache
+    // 3️⃣ Save to local cache
     await local.saveGuideProfile(remoteData);
 
     return remoteData;
@@ -43,7 +45,7 @@ class GuideRepositoryImpl implements GuideRepository {
     );
 
     // 1️⃣ Update on remote
-    await remote.updateGuideProfile(model);
+    await remote.updateGuideProfile(token, model); // ✅ Pass the token!
 
     // 2️⃣ Save to local cache
     await local.saveGuideProfile(model);

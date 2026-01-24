@@ -19,17 +19,20 @@ class GuideModel extends GuideEntity {
           isAvailable: isAvailable,
         );
 
-  factory GuideModel.fromJson(Map<String, dynamic> json) {
-    return GuideModel(
-      guideId: json['guideId'],
-      authId: json['authId'],
-      experience: json['experience'],
-      languages: List<String>.from(json['languages']),
-      bio: json['bio'],
-      rating: (json['rating'] ?? 0).toDouble(),
-      isAvailable: json['isAvailable'] ?? true,
-    );
-  }
+factory GuideModel.fromJson(Map<String, dynamic> json) {
+  return GuideModel(
+    guideId: json['guideId']?.toString(),
+    authId: json['authId'] ?? '',
+    experience: json['experience'] ?? 0,
+    languages: json['languages'] != null
+        ? List<String>.from(json['languages'])
+        : [],
+    bio: json['bio'] ?? '',
+    rating: (json['rating'] ?? 0).toDouble(),
+    isAvailable: json['isAvailable'] ?? true,
+  );
+}
+
 
   Map<String, dynamic> toJson() {
     return {

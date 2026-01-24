@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../data/datasources/remote/guide_remote_datasource.dart';
+import 'package:nepalexplorer/features/guide/data/models/guide_model.dart';
 import '../providers/guide_provider.dart';
 
 class GuideViewModel extends ChangeNotifier {
@@ -26,8 +26,7 @@ Future<bool> login(String email, String password) async {
 
       final token = response['token'];
 
-      // SAVE TOKEN (example using shared preferences)
-      // await _ref.read(authLocalDatasourceProvider).saveToken(token);
+
 
       isLoading = false;
       notifyListeners();
@@ -46,7 +45,7 @@ Future<bool> login(String email, String password) async {
   }
 }
   // Optional: fetch guide profile
-  Future<Map<String, dynamic>?> getProfile(String token) async {
+  Future<GuideModel?> getProfile(String token) async {
     try {
       final api = _ref.read(guideRemoteDatasourceProvider);
       final profile = await api.getGuideProfile(token);

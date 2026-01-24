@@ -5,7 +5,9 @@ import '../profile_screen.dart';
 import '../requests_screen.dart';
 
 class GuideDashboardPage extends StatefulWidget {
-  const GuideDashboardPage({super.key});
+  final String token; // Pass the JWT token here
+
+  const GuideDashboardPage({super.key, required this.token});
 
   @override
   State<GuideDashboardPage> createState() => _GuideDashboardPageState();
@@ -14,11 +16,18 @@ class GuideDashboardPage extends StatefulWidget {
 class _GuideDashboardPageState extends State<GuideDashboardPage> {
   int _selectedIndex = 0;
 
-  final _screens = [
-    const HomeScreen(),
-    const RequestsScreen(),
-    const ProfileScreen(),
-  ];
+  late final List<Widget> _screens;
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize screens with token where required
+    _screens = [
+      const HomeScreen(),
+      const RequestsScreen(),
+      ProfileScreen(token: widget.token), // Pass token to ProfileScreen
+    ];
+  }
 
   void _onTabSelected(int index) {
     setState(() {

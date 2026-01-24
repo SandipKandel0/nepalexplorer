@@ -19,13 +19,12 @@ class MyApp extends StatelessWidget {
       theme: getApplicationTheme(),
       home: const SplashScreen(),
       routes: {
-        '/onboarding': (context) => const OnboardingScreen(),
-        '/login': (context) => LoginScreen(),
-        '/register': (context) => const RegisterScreen(),
-        '/guide_login': (context) => const GuideLoginPage(), 
-        '/guide_dashboard': (context) => const GuideDashboardPage(),
-        '/home': (context) => const BottomNavScreen()
-      },
+      '/onboarding': (context) => const OnboardingScreen(),
+      '/login': (context) => LoginScreen(),
+      '/register': (context) => const RegisterScreen(),
+      '/guide_login': (context) => const GuideLoginPage(),
+      '/home': (context) => const BottomNavScreen(),
+    },
     );
   }
 }
