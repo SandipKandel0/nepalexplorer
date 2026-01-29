@@ -34,7 +34,6 @@ class UserApiModel {
   // To JSON (for API request)
   Map<String, dynamic> toJson() {
     return {
-      "id": id,
       "fullName": fullName,
       "email": email,
       "phoneNumber": phoneNumber,

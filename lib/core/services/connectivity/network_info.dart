@@ -1,6 +1,6 @@
-
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:flutter/foundation.dart'; // <-- kIsWeb
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 abstract interface class INetworkInfo {
@@ -14,25 +14,25 @@ final networkInfoProvider = Provider<INetworkInfo>((ref) {
 class NetworkInfo implements INetworkInfo {
   final Connectivity _connectivity;
 
-  NetworkInfo({required Connectivity connectivity})
-    : _connectivity = connectivity;
+  NetworkInfo({required Connectivity connectivity}) : _connectivity = connectivity;
 
   @override
   Future<bool> get isConnected async {
-    // check for wifi or mobile data on
-    final result = await _connectivity.checkConnectivity();
-    if (result.contains(ConnectivityResult.none)) {
-      return false;
+    if (!kIsWeb) {
+      final hasInternet = await _checkActualInternet();
+      if (hasInternet) return true;
     }
 
-    return await _hasInternetConnection();
+    // Fallback to connectivity_plus
+    final result = await _connectivity.checkConnectivity();
+    return result != ConnectivityResult.none;
   }
 
-  Future<bool> _hasInternetConnection() async {
+  Future<bool> _checkActualInternet() async {
     try {
-      final result = await InternetAddress.lookup("google.com");
+      final result = await InternetAddress.lookup('google.com');
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
+    } on SocketException {
       return false;
     }
   }

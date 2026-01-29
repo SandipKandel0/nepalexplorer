@@ -7,7 +7,7 @@ class HiveAuthService {
   static const String _authBoxName = 'authBox';
   late Box<AuthHiveModel> _authBox;
 
-  // Initialize box 
+  // Initialize box
   Future<void> init() async {
     _authBox = await Hive.openBox<AuthHiveModel>(_authBoxName);
   }
@@ -22,18 +22,23 @@ class HiveAuthService {
   }
 
   // Login user
-  Future<AuthHiveModel?> login(String email, String password) async {
-    final user = _authBox.values.cast<AuthHiveModel?>().firstWhere(
-      (u) => u?.email == email && u?.password == password,
-      orElse: () => null,
-    );
+ Future<AuthHiveModel?> login(String email, String password) async {
+  final user = _authBox.values.cast<AuthHiveModel?>().firstWhere(
+    (u) =>
+        u != null &&
+        u.email.toLowerCase().trim() == email.toLowerCase().trim() &&
+        u.password != null &&
+        u.password!.trim() == password.trim(),
+    orElse: () => null,
+  );
 
-    if (user != null) {
-      await _authBox.put('currentUser', user);
-    }
-
-    return user;
+  if (user != null) {
+    await _authBox.put('currentUser', user);
   }
+
+  return user;
+}
+
 
   // Logout user
   Future<void> logout() async => await _authBox.delete('currentUser');

@@ -1,4 +1,5 @@
 // lib/features/auth/data/datasources/auth_remote_datasource.dart
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nepalexplorer/core/api/api_client.dart';
 import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
@@ -6,14 +7,11 @@ import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/auth_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 
-
 /// Provider for AuthRemoteDatasource
 final authRemoteDatasourceProvider = Provider<IAuthRemoteDatasource>((ref) {
-  // Read dependencies from other providers
   final apiClient = ref.read(apiClientProvider);
   final userSessionService = ref.read(userSessionServiceProvider);
 
-  // Return the datasource instance
   return AuthRemoteDatasource(
     apiClient: apiClient,
     userSessionService: userSessionService,
@@ -30,63 +28,78 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
   })  : _apiClient = apiClient,
         _userSessionService = userSessionService;
 
+  // ================= REGISTER =================
   @override
-  Future<UserApiModel?> register(UserApiModel user) async {
+  Future<UserApiModel> register(UserApiModel user) async {
     final response = await _apiClient.post(
-    ApiEndpoints.register,
-    data: user.toJson());
-    if (response.data['success'] == true){
-      final data = response.data['data'] as Map<String, dynamic>;
-      final registeredUser = UserApiModel.fromJson(data);
-      return registeredUser;
+      ApiEndpoints.register,
+      data: user.toJson(),
+    );
+
+    if (response.data['success'] == true && response.data['data'] != null) {
+      return UserApiModel.fromJson(response.data['data']);
+    } else {
+      throw Exception(response.data['message'] ?? "Registration failed");
     }
-    return user;
   }
 
-@override
-Future<UserApiModel?> login(String email, String password) async {
-  try {
+  // ================= LOGIN =================
+  @override
+  Future<UserApiModel> login(String email, String password) async {
     final response = await _apiClient.post(
       ApiEndpoints.login,
-      data: {"email": email.trim(), "password": password},
+      data: {
+        "email": email.trim(),
+        "password": password,
+      },
     );
 
-    if (response.data["success"] != true || response.data["data"] == null) return null;
+    if (response.data["success"] == true && response.data["data"] != null) {
+      final user = UserApiModel.fromJson(response.data["data"]);
 
-    final user = UserApiModel.fromJson(response.data["data"]);
+      if (user.id == null) {
+        throw Exception("User ID missing in response");
+      }
 
-    await _userSessionService.storeUserSession(
-      userId: user.id!,
-      email: user.email,
-      role: user.role ?? "",
-      fullName: user.fullName,
-    );
+      await _userSessionService.storeUserSession(
+        userId: user.id!,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName,
+      );
 
-    return user;
-  } catch (e) {
-    // You can log error or show a message
-    print("Login error: $e");
-    return null;
+      return user;
+    } else {
+      throw Exception(response.data["message"] ?? "Login failed");
+    }
   }
-}
 
-
+  // ================= LOGOUT =================
   @override
   Future<bool> logout() async {
     final response = await _apiClient.get(ApiEndpoints.logout);
-    if (response.data["success"] != true) return false;
 
-    await _userSessionService.clearUserSession();
-    return true;
+    if (response.data["success"] == true) {
+      await _userSessionService.clearUserSession();
+      return true;
+    } else {
+      throw Exception(response.data["message"] ?? "Logout failed");
+    }
   }
 
+  // ================= GET CURRENT USER =================
   @override
-  Future<UserApiModel?> getCurrentUser(String userId) async {
+  Future<UserApiModel> getCurrentUser(String userId) async {
     final response = await _apiClient.get(ApiEndpoints.userById(userId));
-    if (response.data["success"] != true) return null;
-    return UserApiModel.fromJson(response.data["data"]);
+
+    if (response.data["success"] == true && response.data["data"] != null) {
+      return UserApiModel.fromJson(response.data["data"]);
+    } else {
+      throw Exception("Failed to fetch user");
+    }
   }
 
+  // ================= CHECKS =================
   @override
   Future<bool> isEmailExists(String email) async {
     final response = await _apiClient.get(ApiEndpoints.checkEmailExists(email));
@@ -95,13 +108,15 @@ Future<UserApiModel?> login(String email, String password) async {
 
   @override
   Future<bool> isUsernameExists(String username) async {
-    final response = await _apiClient.get(ApiEndpoints.checkUsernameExists(username));
+    final response =
+        await _apiClient.get(ApiEndpoints.checkUsernameExists(username));
     return response.data["exists"] == true;
   }
 
   @override
   Future<bool> isPhoneExists(String phoneNumber) async {
-    final response = await _apiClient.get(ApiEndpoints.checkPhoneExists(phoneNumber));
+    final response =
+        await _apiClient.get(ApiEndpoints.checkPhoneExists(phoneNumber));
     return response.data["exists"] == true;
   }
 }

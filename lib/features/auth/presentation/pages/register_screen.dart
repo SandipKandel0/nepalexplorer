@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasources.dart';
-import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
+import 'package:nepalexplorer/features/auth/presentation/state/auth_state.dart';
+import 'package:nepalexplorer/features/auth/presentation/view_model/auth_view_model.dart';
+
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -23,61 +24,51 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _isLoading = false;
   bool _isGuide = false; // new role toggle
 
-  Future<void> _register() async {
-    if (!_formKey.currentState!.validate()) return;
+ Future<void> _register() async {
+  if (!_formKey.currentState!.validate()) return;
 
-    if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Passwords do not match")),
-      );
-      return;
-    }
-
-    setState(() => _isLoading = true);
-
-    try {
-      final authRemoteDatasource = ref.read(authRemoteDatasourceProvider);
-
-      final newUser = UserApiModel(
-        fullName: _fullNameController.text.trim(),
-        email: _emailController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-        username: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
-        role: _isGuide ? 'guide' : 'user', // assign role dynamically
-      );
-
-      final registeredUser = await authRemoteDatasource.register(newUser);
-
-      setState(() => _isLoading = false);
-
-      if (registeredUser != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registration successful!")),
-        );
-        if (_isGuide) {
-          Navigator.pushReplacementNamed(context, '/guide_login');
-        } else {
-          Navigator.pushReplacementNamed(context, '/login');
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Registration failed. Please try again.")),
-        );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
-    }
+  if (_passwordController.text != _confirmPasswordController.text) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Passwords do not match")),
+    );
+    return;
   }
 
+  // Trigger registration via ViewModel
+  await ref.read(authViewModelProvider.notifier).register(
+    fullName: _fullNameController.text.trim(),
+    email: _emailController.text.trim(),
+    phoneNumber: _phoneController.text.trim(),
+    username: _usernameController.text.trim(),
+    password: _passwordController.text.trim(),
+    role: _isGuide ? 'guide' : 'user',
+  );
+}
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final containerWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
+  final screenWidth = MediaQuery.of(context).size.width;
+  final containerWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
 
+  // Watch the auth state
+  final authState = ref.watch(authViewModelProvider);
+
+  // Listen to state changes for navigation / messages
+  ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+    if (next.status == AuthStatus.register) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Registration successful!")),
+      );
+      if (_isGuide) {
+        Navigator.pushReplacementNamed(context, '/guide_login');
+      } else {
+        Navigator.pushReplacementNamed(context, '/login');
+      }
+    } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(next.errorMessage!)),
+      );
+    }
+  });
     return Scaffold(
       body: SizedBox(
         width: double.infinity,
@@ -191,7 +182,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // ROLE TOGGLE SWITCH
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -212,8 +202,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         width: double.infinity,
                         height: 50,
                         child: ElevatedButton(
-                          onPressed: _isLoading ? null : _register,
-                          child: _isLoading
+                          onPressed: authState.status == AuthStatus.loading ? null : _register,
+                          child:authState.status == AuthStatus.loading 
                               ? const CircularProgressIndicator(color: Colors.white)
                               : const Text("Register", style: TextStyle(fontSize: 18)),
                         ),

@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nepalexplorer/core/error/failures.dart';
 import 'package:nepalexplorer/core/services/connectivity/network_info.dart';
-
 import 'package:nepalexplorer/features/auth/data/datasources/auth_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasources.dart';
@@ -42,21 +41,37 @@ class AuthRepository implements IAuthRepository {
         _authRemoteDatasource = authRemoteDatasource,
         _networkInfo = networkInfo;
 
-
-  /// ✔ LOGIN
-  @override
-  Future<Either<Failure, AuthEntity>> login(String email, String password) async {
+@override
+Future<Either<Failure, AuthEntity>> login(String email, String password) async {
+  if (await _networkInfo.isConnected) {
     try {
-      // LOCAL LOGIN
+      // Call remote API
+      final apiModel = await _authRemoteDatasource.login(email, password);
+
+      // Save user to local cache
+      final hiveModel = AuthHiveModel.fromEntity(apiModel!.toEntity());
+      await _authLocalDatasource.register(hiveModel);
+
+      return Right(apiModel!.toEntity());
+    } on DioException catch (e) {
+      return Left(ApiFailure(
+        message: e.response?.data['message'] ?? 'Login failed',
+        statusCode: e.response?.statusCode,
+      ));
+    } catch (e) {
+      return Left(ApiFailure(message: e.toString()));
+    }
+  } else {
+    // Offline fallback
+    try {
       final user = await _authLocalDatasource.login(email, password);
       if (user != null) return Right(user.toEntity());
-
-      return Left(LocalDatabaseFailure(message: 'Invalid email or password'));
+      return Left(NetworkFailure(message: "No internet connection"));
     } catch (e) {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
-
+}
 
   /// ✔ LOGOUT
   @override
@@ -70,7 +85,6 @@ class AuthRepository implements IAuthRepository {
       return Left(LocalDatabaseFailure(message: e.toString()));
     }
   }
-
 
   /// ✔ REGISTER
   @override

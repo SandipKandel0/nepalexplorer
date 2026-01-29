@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
+import '../state/auth_state.dart';
+import '../view_model/auth_view_model.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -12,56 +12,55 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool _isLoading = false;
+  @override
+  void initState() {
+    super.initState();
+
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
 
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    setState(() => _isLoading = true);
-
-    try {
-      final email = _usernameController.text.trim();
-      final password = _passwordController.text.trim();
-
-      final response = await http.post(
-        Uri.parse('http://localhost:3000/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
-
-      final data = jsonDecode(response.body);
-
-      setState(() => _isLoading = false);
-
-      if (response.statusCode == 200 && data['success'] == true) {
-        final role = data['data']['role'];
-
-        if (role == 'guide') {
-          Navigator.pushReplacementNamed(context, '/guide_home');
-        } else {
-          Navigator.pushReplacementNamed(context, '/home');
-        }
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? 'Login failed')),
+    // Trigger login via ViewModel
+    await ref.read(authViewModelProvider.notifier).login(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
         );
-      }
-    } catch (e) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Login failed: $e")),
-      );
-    }
+
+    // No need to manually read authState here — ref.listen handles navigation and errors
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authViewModelProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
     final containerWidth = screenWidth > 500 ? 400.0 : screenWidth * 0.9;
+
+     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+        if (next.status == AuthStatus.authenticated && next.authEntity != null) {
+          final role = next.authEntity!.role;
+          if (role == 'guide') {
+            Navigator.pushReplacementNamed(context, '/guide_home');
+          } else {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        } else if (next.status == AuthStatus.error && next.errorMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(next.errorMessage!)),
+          );
+        }
+      });
 
     return Scaffold(
       body: SizedBox(
@@ -76,18 +75,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
             Positioned.fill(
-              child: Container(color: const Color.fromRGBO(0, 0, 0, 0.5)),
+              child: Container(color: Colors.black.withOpacity(0.5)),
             ),
             Center(
               child: SingleChildScrollView(
                 child: Container(
                   width: containerWidth,
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: const Color.fromARGB(31, 251, 251, 251),
+                    color: Colors.white.withOpacity(0.9),
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: const [
-                      BoxShadow(color: Colors.white),
+                      BoxShadow(color: Colors.black26, blurRadius: 10),
                     ],
                   ),
                   child: Form(
@@ -97,12 +96,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         const Text(
                           "Welcome Back!",
                           style: TextStyle(
-                            fontSize: 30,
+                            fontSize: 32,
                             fontWeight: FontWeight.bold,
                             color: Colors.blueAccent,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         const Text(
                           "Login to your account",
                           style: TextStyle(
@@ -110,18 +109,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             color: Colors.blueAccent,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 30),
                         TextFormField(
-                          controller: _usernameController,
+                          controller: _emailController,
+                          keyboardType: TextInputType.emailAddress,
                           decoration: InputDecoration(
                             labelText: "Email",
+                            prefixIcon: const Icon(Icons.email),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? "Email is required"
-                              : null,
+                          validator: (value) =>
+                              value == null || value.isEmpty
+                                  ? "Email is required"
+                                  : null,
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -129,21 +131,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           obscureText: true,
                           decoration: InputDecoration(
                             labelText: "Password",
+                            prefixIcon: const Icon(Icons.lock),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? "Password is required"
-                              : null,
+                          validator: (value) =>
+                              value == null || value.isEmpty
+                                  ? "Password is required"
+                                  : null,
                         ),
-                        const SizedBox(height: 25),
+                        const SizedBox(height: 30),
                         SizedBox(
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: _isLoading ? null : _login,
-                            child: _isLoading
+                            onPressed: authState.status == AuthStatus.loading
+                                ? null
+                                : _login,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blueAccent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: authState.status == AuthStatus.loading
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
                                   )
