@@ -7,17 +7,50 @@ final userSessionServiceProvider =
 class UserSessionService {
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  static const _userIdKey = "user_id";
+  static const _emailKey = "email";
+  static const _roleKey = "role";
+  static const _fullNameKey = "full_name";
+
+  // ================= STORE SESSION =================
+
   Future<void> storeUserSession({
     required String userId,
     required String email,
     required String role,
     required String fullName,
   }) async {
-    await _storage.write(key: "user_id", value: userId);
-    await _storage.write(key: "email", value: email);
-    await _storage.write(key: "role", value: role);
-    await _storage.write(key: "full_name", value: fullName);
+    await _storage.write(key: _userIdKey, value: userId);
+    await _storage.write(key: _emailKey, value: email);
+    await _storage.write(key: _roleKey, value: role);
+    await _storage.write(key: _fullNameKey, value: fullName);
   }
+
+  // ================= GET SESSION DATA =================
+
+  Future<String?> getCurrentUserId() async {
+    return await _storage.read(key: _userIdKey);
+  }
+
+  Future<String?> getEmail() async {
+    return await _storage.read(key: _emailKey);
+  }
+
+  Future<String?> getRole() async {
+    return await _storage.read(key: _roleKey);
+  }
+
+  Future<String?> getFullName() async {
+    return await _storage.read(key: _fullNameKey);
+  }
+
+  /// Check if session exists
+  Future<bool> isLoggedIn() async {
+    final userId = await _storage.read(key: _userIdKey);
+    return userId != null;
+  }
+
+  // ================= CLEAR SESSION =================
 
   Future<void> clearUserSession() async {
     await _storage.deleteAll();
