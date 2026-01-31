@@ -33,7 +33,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     );
     return;
   }
-
   // Trigger registration via ViewModel
   await ref.read(authViewModelProvider.notifier).register(
     fullName: _fullNameController.text.trim(),

@@ -36,7 +36,7 @@ Future<bool> login(String email, String password) async {
       return false;
     }
   } catch (e) {
-    errorMessage = e.toString(); // 🔥 show real error
+    errorMessage = e.toString();
     isLoading = false;
     notifyListeners();
     return false;

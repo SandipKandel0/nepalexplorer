@@ -24,7 +24,7 @@ class ApiEndpoints {
   }
 
   static String get serverUrl => "http://$_host:$_port/api";
-  static String get baseUrl => "$serverUrl/api";
+  static String get baseUrl => "$serverUrl";
   static String get mediaServerUrl => serverUrl;
 
   static const Duration connectionTimeout = Duration(seconds: 30);

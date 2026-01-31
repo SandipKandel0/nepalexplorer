@@ -19,17 +19,17 @@ class UserApiModel {
   });
 
   // From JSON (API response)
-  factory UserApiModel.fromJson(Map<String, dynamic> json) {
-    return UserApiModel(
-      id: json['_id'] as String?,
-      fullName: json['fullName'] as String,
-      email: json['email'] as String,
-      phoneNumber: json['phoneNumber'] as String?,
-      username: json['username'] as String,
-      password: json['password'] as String?,
-      role: json['role'] as String? ?? 'user', // default to 'user' if null
-    );
-  }
+factory UserApiModel.fromJson(Map<String, dynamic> json) {
+  return UserApiModel(
+    id: json['_id']?.toString(),
+    fullName: json['fullName'] ?? '',
+    email: json['email'] ?? '',
+    phoneNumber: json['phoneNumber']?.toString(),
+    username: json['username'] ?? '',
+    password: json['password']?.toString(),
+    role: json['role'] ?? 'user', // already default
+  );
+}
 
   // To JSON (for API request)
   Map<String, dynamic> toJson() {

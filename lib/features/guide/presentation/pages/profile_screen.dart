@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/features/guide/data/models/guide_model.dart';
-
 import '../../data/datasources/remote/guide_remote_datasource.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -54,7 +53,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       });
     }
   }
-
   Future<void> saveProfile() async {
     if (guide == null) return;
 
@@ -66,8 +64,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       experience: int.tryParse(experienceController.text) ?? guide!.experience,
       languages: languagesController.text.split(",").map((e) => e.trim()).toList(),
       bio: bioController.text,
-      rating: guide!.rating,
-      isAvailable: guide!.isAvailable,
+      isAvailable: guide!.isAvailable, fullName: '', email: '', phoneNumber: '',
     );
 
     try {
