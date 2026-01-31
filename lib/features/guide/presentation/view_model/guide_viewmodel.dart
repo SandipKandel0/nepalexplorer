@@ -26,8 +26,6 @@ Future<bool> login(String email, String password) async {
 
       final token = response['token'];
 
-
-
       isLoading = false;
       notifyListeners();
       return true;
