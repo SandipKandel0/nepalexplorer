@@ -11,6 +11,7 @@ class UserSessionService {
   static const _emailKey = "email";
   static const _roleKey = "role";
   static const _fullNameKey = "full_name";
+  static const _tokenKey = "auth_token";
 
   // ================= STORE SESSION =================
 
@@ -19,11 +20,21 @@ class UserSessionService {
     required String email,
     required String role,
     required String fullName,
+    String? token,
   }) async {
     await _storage.write(key: _userIdKey, value: userId);
     await _storage.write(key: _emailKey, value: email);
     await _storage.write(key: _roleKey, value: role);
     await _storage.write(key: _fullNameKey, value: fullName);
+    if (token != null && token.isNotEmpty) {
+      await _storage.write(key: _tokenKey, value: token);
+    }
+  }
+
+  // ================= GET STORED TOKEN =================
+
+  Future<String?> getToken() async {
+    return await _storage.read(key: _tokenKey);
   }
 
   // ================= GET SESSION DATA =================

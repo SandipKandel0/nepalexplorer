@@ -5,9 +5,7 @@ import '../profile_screen.dart';
 import '../requests_screen.dart';
 
 class GuideDashboardPage extends StatefulWidget {
-  final String token; // Pass the JWT token here
-
-  const GuideDashboardPage({super.key, required this.token});
+  const GuideDashboardPage({super.key});
 
   @override
   State<GuideDashboardPage> createState() => _GuideDashboardPageState();
@@ -21,11 +19,11 @@ class _GuideDashboardPageState extends State<GuideDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize screens with token where required
+    // Initialize screens
     _screens = [
       const HomeScreen(),
       const RequestsScreen(),
-      ProfileScreen(token: widget.token), // Pass token to ProfileScreen
+      const ProfileScreen(),
     ];
   }
 

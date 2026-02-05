@@ -96,7 +96,7 @@ class _AuthInterceptor extends Interceptor {
   static const String _tokenKey = 'auth_token';
 
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
     // Public endpoints that do NOT require auth
     final publicEndpoints = [
       ApiEndpoints.register,
@@ -106,9 +106,13 @@ class _AuthInterceptor extends Interceptor {
     final isPublicEndpoint = publicEndpoints.any((endpoint) => options.path.startsWith(endpoint));
 
     if (!isPublicEndpoint) {
-      final token = await _storage.read(key: _tokenKey);
-      if (token != null) {
-        options.headers['Authorization'] = 'Bearer $token';
+      try {
+        final token = await _storage.read(key: _tokenKey);
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      } catch (e) {
+        print('Error reading token: $e');
       }
     }
 
@@ -116,11 +120,14 @@ class _AuthInterceptor extends Interceptor {
   }
 
   @override
-  void onError(DioException err, ErrorInterceptorHandler handler) async {
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
     // Handle 401 Unauthorized - token expired
     if (err.response?.statusCode == 401) {
-      await _storage.delete(key: _tokenKey);
-      // TODO: Optionally trigger navigation to login
+      try {
+        await _storage.delete(key: _tokenKey);
+      } catch (e) {
+        print('Error deleting token: $e');
+      }
     }
     handler.next(err);
   }

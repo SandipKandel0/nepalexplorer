@@ -35,7 +35,9 @@ class ApiEndpoints {
   static const String login = '/auth/login';
   static const String logout = '/auth/logout';
   static const String refreshToken = '/auth/refresh-token';
-  static String authById(String id) => '$baseUrl/auth/$id';
+  static const String getProfile = '/auth/profile';
+  static const String updateProfile = '/auth/profile';
+  static String authById(String id) => '/auth/$id';
 
   // USER
   static const String users = '/users';

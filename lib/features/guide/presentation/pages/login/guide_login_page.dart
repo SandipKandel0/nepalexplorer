@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-
+import 'package:nepalexplorer/core/api/api_client.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
 import 'package:nepalexplorer/features/guide/presentation/pages/dashboard/guide_dashboard_page.dart';
 
 /// Provider for guide login view model
@@ -12,36 +12,52 @@ final guideViewModelProvider =
 class GuideViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
+  late ApiClient _apiClient;
+  late UserSessionService _userSessionService;
 
-  /// Now returns TOKEN instead of bool
-  Future<String?> login(String email, String password) async {
+  GuideViewModel() {
+    _apiClient = ApiClient();
+    _userSessionService = UserSessionService();
+  }
+
+  /// Login guide and store token in secure storage
+  Future<bool> login(String email, String password) async {
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await http.post(
-        Uri.parse('http://localhost:3000/api/auth/loginGuide'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
+      final response = await _apiClient.post(
+        ApiEndpoints.guideLogin,
+        data: {'email': email, 'password': password},
       );
-
-      final data = jsonDecode(response.body);
 
       isLoading = false;
       notifyListeners();
 
-      if (response.statusCode == 200 && data['success'] == true) {
-        return data['token']; // ✅ RETURN TOKEN
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        final token = response.data['token'];
+        final user = response.data['data']['user'];
+        
+        // Store token and user data in secure storage
+        await _userSessionService.storeUserSession(
+          userId: user['_id'] ?? '',
+          fullName: user['fullName'] ?? '',
+          email: user['email'] ?? '',
+          role: user['role'] ?? 'guide',
+          token: token,
+        );
+        
+        return true; // ✅ LOGIN SUCCESS
       } else {
-        errorMessage = data['message'] ?? 'Login failed';
-        return null;
+        errorMessage = response.data['message'] ?? 'Login failed';
+        return false;
       }
     } catch (e) {
       isLoading = false;
-      errorMessage = 'Server error. Please try again.';
+      errorMessage = 'Server error: ${e.toString()}';
       notifyListeners();
-      return null;
+      return false;
     }
   }
 }
@@ -160,26 +176,29 @@ class _GuideLoginPageState extends ConsumerState<GuideLoginPage> {
                               : ElevatedButton(
                                   onPressed: () async {
                                     if (_formKey.currentState!.validate()) {
-                                      final token = await viewModel.login(
+                                      final success = await viewModel.login(
                                         _emailController.text.trim(),
                                         _passwordController.text.trim(),
                                       );
 
-                                      if (token != null) {
-                                        // ✅ PASS TOKEN TO DASHBOARD
-                                        Navigator.pushReplacement(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (_) =>
-                                                GuideDashboardPage(token: token),
-                                          ),
-                                        );
+                                      if (success) {
+                                        // ✅ LOGIN SUCCESS - Navigate to dashboard
+                                        if (mounted) {
+                                          Navigator.pushReplacement(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) =>
+                                                  const GuideDashboardPage(),
+                                            ),
+                                          );
+                                        }
                                       } else {
                                         ScaffoldMessenger.of(context)
                                             .showSnackBar(
                                           SnackBar(
                                             content: Text(viewModel.errorMessage ??
                                                 "Login failed"),
+                                            backgroundColor: Colors.red,
                                           ),
                                         );
                                       }

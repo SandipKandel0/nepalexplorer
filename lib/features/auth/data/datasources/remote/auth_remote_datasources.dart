@@ -37,7 +37,21 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
     );
 
     if (response.data['success'] == true && response.data['data'] != null) {
-      return UserApiModel.fromJson(response.data['data']);
+      final userData = UserApiModel.fromJson(response.data['data']);
+      final token = response.data['token']; // Extract token from response
+
+      // Save user session and token after registration
+      if (userData.id != null) {
+        await _userSessionService.storeUserSession(
+          userId: userData.id!,
+          email: userData.email,
+          role: userData.role,
+          fullName: userData.fullName,
+          token: token,
+        );
+      }
+
+      return userData;
     } else {
       throw Exception(response.data['message'] ?? "Registration failed");
     }
@@ -56,6 +70,7 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
 
     if (response.data["success"] == true && response.data["data"] != null) {
       final user = UserApiModel.fromJson(response.data["data"]);
+      final token = response.data["token"]; // Extract token from response
 
       if (user.id == null) {
         throw Exception("User ID missing in response");
@@ -66,6 +81,7 @@ class AuthRemoteDatasource implements IAuthRemoteDatasource {
         email: user.email,
         role: user.role,
         fullName: user.fullName,
+        token: token, // Save token
       );
 
       return user;
