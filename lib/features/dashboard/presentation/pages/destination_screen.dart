@@ -1,13 +1,271 @@
 import 'package:flutter/material.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:nepalexplorer/core/services/favorites_service.dart';
 
-class DestinationScreen extends StatelessWidget {
+class DestinationScreen extends StatefulWidget {
   const DestinationScreen({super.key});
 
   @override
+  State<DestinationScreen> createState() => _DestinationScreenState();
+}
+
+class _DestinationScreenState extends State<DestinationScreen> {
+  late FavoritesService _favoritesService;
+  String _searchQuery = '';
+  final TextEditingController _searchController = TextEditingController();
+
+  final List<Map<String, dynamic>> popularPlaces = const [
+    {
+      'title': 'Mount Everest',
+      'location': 'Sagarmatha, Nepal',
+      'rating': '4.9',
+      'description': 'The highest mountain in the world',
+      'image': 'assets/images/image1.png',
+    },
+    {
+      'title': 'Pashupatinath Temple',
+      'location': 'Bagmati, Kathmandu',
+      'rating': '4.7',
+      'description': 'Sacred Hindu temple on the Bagmati River',
+      'image': 'assets/images/pashupatinath.jpeg',
+    },
+    {
+      'title': 'Chitwan National Park',
+      'location': 'Chitwan',
+      'rating': '4.6',
+      'description': 'Wildlife sanctuary and jungle adventure',
+      'image': 'assets/images/chitwan.jpeg',
+    },
+    {
+      'title': 'Boudhanath Stupa',
+      'location': 'Kathmandu',
+      'rating': '4.8',
+      'description': 'Ancient Buddhist monument and pilgrimage site',
+      'image': 'assets/images/BoudhhaStupa.jpeg',
+    },
+    {
+      'title': 'Lumbini Garden',
+      'location': 'Lumbini',
+      'rating': '4.5',
+      'description': 'Birthplace of Buddha',
+      'image': 'assets/images/Lumbini.jpeg',
+    },
+    {
+      'title': 'Pokhara Lake',
+      'location': 'Pokhara',
+      'rating': '4.7',
+      'description': 'Beautiful lakeside city with Himalayan views',
+      'image': 'assets/images/image1.png',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _favoritesService = FavoritesService();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> _getFilteredPlaces() {
+    if (_searchQuery.isEmpty) {
+      return popularPlaces;
+    }
+    return popularPlaces
+        .where((place) =>
+            place['title'].toLowerCase().contains(_searchQuery) ||
+            place['location'].toLowerCase().contains(_searchQuery) ||
+            place['description'].toLowerCase().contains(_searchQuery))
+        .toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return  Scaffold(
-      appBar: AppBar(),
-      body: Center(child: Text("Destination Screen")),
+    final filteredPlaces = _getFilteredPlaces();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Popular Destinations'),
+        elevation: 0,
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search destinations...',
+                prefixIcon: const Icon(Icons.search),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                        },
+                        child: const Icon(Icons.clear),
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.grey[100],
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(25),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: filteredPlaces.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off, size: 64, color: Colors.grey[300]),
+                        const SizedBox(height: 16),
+                        Text(
+                          'No destinations found',
+                          style: TextStyle(color: Colors.grey[600]),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(12),
+                    itemCount: filteredPlaces.length,
+                    itemBuilder: (context, index) {
+                      final place = filteredPlaces[index];
+                      final isFavorite = _favoritesService.isFavorite(place['title']);
+
+                      return Card(
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: const BorderRadius.only(
+                                    topLeft: Radius.circular(12),
+                                    topRight: Radius.circular(12),
+                                  ),
+                                  child: Image.asset(
+                                    place['image'],
+                                    height: 200,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 8,
+                                  right: 8,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      setState(() {
+                                        if (isFavorite) {
+                                          _favoritesService.removeFavorite(place['title']);
+                                        } else {
+                                          _favoritesService.addFavorite(place);
+                                        }
+                                      });
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            isFavorite
+                                                ? 'Removed from favorites'
+                                                : 'Added to favorites',
+                                          ),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    },
+                                    child: Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withOpacity(0.2),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                      padding: const EdgeInsets.all(8),
+                                      child: Icon(
+                                        isFavorite ? Icons.favorite : Icons.favorite_border,
+                                        color: isFavorite ? Colors.red : Colors.grey,
+                                        size: 24,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    place['title'],
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.location_on, size: 14, color: Colors.grey),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        place['location'],
+                                        style: const TextStyle(color: Colors.grey, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    place['description'],
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Icon(Icons.star, size: 16, color: Colors.orange),
+                                          const SizedBox(width: 4),
+                                          Text(place['rating']),
+                                        ],
+                                      ),
+                                      TextButton(
+                                        onPressed: () {},
+                                        child: const Text('Learn More'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
+      ),
     );
   }
 }
+

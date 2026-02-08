@@ -1,7 +1,17 @@
 import 'package:flutter/material.dart';
+import 'destination_screen.dart';
+import 'guides_list_screen.dart';
+import 'notifications_screen.dart';
+import 'favorites_screen.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
 
   final List<Map<String, dynamic>> destinations = const [
     {
@@ -38,8 +48,8 @@ class DashboardScreen extends StatelessWidget {
   ];
 
   final List<Map<String, dynamic>> activities = const [
-    {'icon': Icons.map, 'label': 'Guide Details'},
-    {'icon': Icons.hotel, 'label': 'Available Hotel'},
+    {'icon': Icons.landscape, 'label': 'Browse Destinations'},
+    {'icon': Icons.person, 'label': 'Guide Details'},
   ];
 
   @override
@@ -49,10 +59,20 @@ class DashboardScreen extends StatelessWidget {
       appBar: AppBar(
         automaticallyImplyLeading: false,
         title: const Text('NepalExplorer'),
-        actions: const [
+        actions: [
           Padding(
-            padding: EdgeInsets.only(right: 10),
-            child: Icon(Icons.notifications_none),
+            padding: const EdgeInsets.only(right: 10),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const NotificationsScreen(),
+                  ),
+                );
+              },
+              child: const Icon(Icons.notifications_none),
+            ),
           )
         ],
       ),
@@ -142,11 +162,51 @@ class DashboardScreen extends StatelessWidget {
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: activities
-                    .map((a) => ActivityItem(icon: a['icon'], label: a['label']))
-                    .toList(),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ActivityItem(
+                        icon: activities[0]['icon'],
+                        label: activities[0]['label'],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const DestinationScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      ActivityItem(
+                        icon: activities[1]['icon'],
+                        label: activities[1]['label'],
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const GuidesListScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  ActivityItem(
+                    icon: Icons.favorite,
+                    label: 'My Favorites',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const FavoritesScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -214,19 +274,47 @@ class DestinationCard extends StatelessWidget {
   }
 }
 
-class ActivityItem extends StatelessWidget {
+class ActivityItem extends StatefulWidget {
   final IconData icon;
   final String label;
-  const ActivityItem({super.key, required this.icon, required this.label});
+  final VoidCallback onTap;
+
+  const ActivityItem({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  State<ActivityItem> createState() => _ActivityItemState();
+}
+
+class _ActivityItemState extends State<ActivityItem> {
+  bool _isPressed = false;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        CircleAvatar(radius: 26, backgroundColor: Colors.grey.shade200, child: Icon(icon)),
-        const SizedBox(height: 8),
-        Text(label),
-      ],
+    return GestureDetector(
+      onTap: widget.onTap,
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) => setState(() => _isPressed = false),
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedScale(
+        scale: _isPressed ? 0.95 : 1.0,
+        duration: const Duration(milliseconds: 100),
+        child: Column(
+          children: [
+            CircleAvatar(
+              radius: 26,
+              backgroundColor: Colors.grey.shade200,
+              child: Icon(widget.icon),
+            ),
+            const SizedBox(height: 8),
+            Text(widget.label),
+          ],
+        ),
+      ),
     );
   }
 }
