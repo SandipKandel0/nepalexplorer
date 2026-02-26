@@ -88,6 +88,8 @@ class ProfileViewModel extends ChangeNotifier {
 
     try {
       FormData formData = FormData.fromMap({
+        'fullName': fullName,
+        'phoneNumber': phoneNumber,
         'bio': bio,
         'languages': languages,
         'experience': experience,
@@ -96,6 +98,8 @@ class ProfileViewModel extends ChangeNotifier {
       // Add profile picture using bytes (web) or file path (mobile/desktop)
       if (profilePictureBytes != null && profilePictureBytes.isNotEmpty) {
         formData = FormData.fromMap({
+          'fullName': fullName,
+          'phoneNumber': phoneNumber,
           'bio': bio,
           'languages': languages,
           'experience': experience,
@@ -106,6 +110,8 @@ class ProfileViewModel extends ChangeNotifier {
         });
       } else if (profilePicturePath != null && profilePicturePath.isNotEmpty) {
         formData = FormData.fromMap({
+          'fullName': fullName,
+          'phoneNumber': phoneNumber,
           'bio': bio,
           'languages': languages,
           'experience': experience,

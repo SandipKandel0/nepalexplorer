@@ -1,6 +1,8 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -17,6 +19,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   File? _profileImage;
+  Uint8List? _profileImageBytes;
+  String? _profileImageName;
   final _picker = ImagePicker();
   late ApiClient _apiClient;
 
@@ -126,9 +130,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (image != null) {
-      setState(() {
-        _profileImage = File(image.path);
-      });
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _profileImageBytes = bytes;
+          _profileImageName = image.name;
+          _profileImage = null;
+        });
+      } else {
+        setState(() {
+          _profileImage = File(image.path);
+          _profileImageBytes = null;
+          _profileImageName = image.name;
+        });
+      }
     }
   }
 
@@ -213,7 +228,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       });
 
       // Add profile picture if selected
-      if (_profileImage != null) {
+      if (_profileImageBytes != null && _profileImageBytes!.isNotEmpty) {
+        formData = FormData.fromMap({
+          'fullName': _nameController.text,
+          'phoneNumber': _phoneController.text,
+          'profilePicture': MultipartFile.fromBytes(
+            _profileImageBytes!,
+            filename: _profileImageName ?? 'profile.jpg',
+          ),
+        });
+      } else if (_profileImage != null) {
         formData = FormData.fromMap({
           'fullName': _nameController.text,
           'phoneNumber': _phoneController.text,
@@ -234,6 +258,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         setState(() {
           _profilePictureUrl = data['profilePicture'];
           _profileImage = null; // Clear local image after upload
+          _profileImageBytes = null;
+          _profileImageName = null;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -263,12 +289,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     children: [
                       CircleAvatar(
                         radius: 60,
-                        backgroundImage: _profileImage != null
+                        backgroundImage: _profileImageBytes != null
+                          ? MemoryImage(_profileImageBytes!)
+                          : _profileImage != null
                             ? FileImage(_profileImage!)
                             : _profilePictureUrl != null
-                                ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
-                                : null,
-                        child: (_profileImage == null && _profilePictureUrl == null)
+                              ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
+                              : null,
+                        child: (_profileImageBytes == null && _profileImage == null && _profilePictureUrl == null)
                             ? const Icon(Icons.person, size: 60)
                             : null,
                       ),
@@ -290,65 +318,78 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  TextField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(
-                      labelText: "Full Name",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: _emailController,
-                    readOnly: true,
-                    decoration: const InputDecoration(
-                      labelText: "Email",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    controller: _phoneController,
-                    decoration: const InputDecoration(
-                      labelText: "Phone Number",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 15),
-                  TextField(
-                    readOnly: true,
-                    decoration: InputDecoration(
-                      labelText: "Role",
-                      border: const OutlineInputBorder(),
-                      hintText: _role ?? '',
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
+                  Container(
                     width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _loading ? null : _saveProfile,
-                      child: _loading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Text("Save Changes"),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.grey.shade300),
                     ),
-                  ),
-                  const SizedBox(height: 15),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _logout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                      ),
-                      child: const Text(
-                        "Logout",
-                        style: TextStyle(color: Colors.white),
-                      ),
+                    child: Column(
+                      children: [
+                        TextField(
+                          controller: _nameController,
+                          decoration: const InputDecoration(
+                            labelText: "Full Name",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextField(
+                          controller: _emailController,
+                          readOnly: true,
+                          decoration: const InputDecoration(
+                            labelText: "Email",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextField(
+                          controller: _phoneController,
+                          decoration: const InputDecoration(
+                            labelText: "Phone Number",
+                            border: OutlineInputBorder(),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        TextField(
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: "Role",
+                            border: const OutlineInputBorder(),
+                            hintText: _role ?? '',
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _saveProfile,
+                            child: _loading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Text("Save Changes"),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _logout,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                            ),
+                            child: const Text(
+                              "Logout",
+                              style: TextStyle(color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
