@@ -3,6 +3,7 @@ import 'destination_screen.dart';
 import 'guides_list_screen.dart';
 import 'notifications_screen.dart';
 import 'favorites_screen.dart';
+import 'destination_details_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -18,24 +19,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
       'title': 'Pashupatinath Temple',
       'location': 'Bagmati, Kathmandu',
       'rating': '4.7',
+      'description': 'Sacred Hindu temple on the Bagmati River',
       'image': 'assets/images/pashupatinath.jpeg',
     },
     {
       'title': 'Chitwan National Park',
       'location': 'Bagmati, Chitwan',
       'rating': '4.6',
+      'description': 'Wildlife sanctuary and jungle adventure',
       'image': 'assets/images/chitwan.jpeg',
     },
     {
       'title': 'Boudhanath Stupa',
       'location': 'Kathmandu',
       'rating': '4.8',
+      'description': 'Ancient Buddhist monument and pilgrimage site',
       'image': 'assets/images/BoudhhaStupa.jpeg',
     },
     {
       'title': 'Lumbini Garden',
       'location': 'Lumbini',
       'rating': '4.5',
+      'description': 'Birthplace of Buddha and major pilgrimage destination',
       'image': 'assets/images/Lumbini.jpeg',
     },
   ];
@@ -151,6 +156,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     location: item['location'],
                     rating: item['rating'],
                     image: item['image'],
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => DestinationDetailsScreen(
+                            destination: item,
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
@@ -235,40 +250,45 @@ class CategoryItem extends StatelessWidget {
 
 class DestinationCard extends StatelessWidget {
   final String title, location, rating, image;
+  final VoidCallback onTap;
   const DestinationCard(
       {super.key,
       required this.title,
       required this.location,
       required this.rating,
-      required this.image});
+      required this.image,
+      required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 180,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(16),
-            child: Image.asset(image, height: 170, width: double.infinity, fit: BoxFit.cover),
-          ),
-          const SizedBox(height: 8),
-          Text(title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis),
-          const SizedBox(height: 4),
-          Text(location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              const Icon(Icons.star, size: 14, color: Colors.orange),
-              const SizedBox(width: 4),
-              Text(rating),
-            ],
-          ),
-        ],
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 180,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(16),
+              child: Image.asset(image, height: 170, width: double.infinity, fit: BoxFit.cover),
+            ),
+            const SizedBox(height: 8),
+            Text(title,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis),
+            const SizedBox(height: 4),
+            Text(location, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                const Icon(Icons.star, size: 14, color: Colors.orange),
+                const SizedBox(width: 4),
+                Text(rating),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

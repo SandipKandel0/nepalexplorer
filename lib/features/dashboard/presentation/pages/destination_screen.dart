@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
+import 'destination_details_screen.dart';
 
 class DestinationScreen extends StatefulWidget {
   const DestinationScreen({super.key});
@@ -248,9 +249,26 @@ class _DestinationScreenState extends State<DestinationScreen> {
                                           Text(place['rating']),
                                         ],
                                       ),
-                                      TextButton(
-                                        onPressed: () {},
-                                        child: const Text('Learn More'),
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => DestinationDetailsScreen(
+                                                destination: place,
+                                              ),
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.info_outline, size: 18),
+                                        label: const Text('Details'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.blueAccent,
+                                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(8),
+                                          ),
+                                        ),
                                       ),
                                     ],
                                   ),

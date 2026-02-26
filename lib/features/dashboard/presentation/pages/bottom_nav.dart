@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
 import 'destination_screen.dart';
-import 'favourite_screen.dart';
+import 'favorites_screen.dart';
 import 'profile_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
@@ -17,7 +17,7 @@ class _BottomNavScreenState extends State<BottomNavScreen> {
   final List<Widget> _screens = const [
     DashboardScreen(),
     DestinationScreen(),
-    FavouriteScreen(),
+    FavoritesScreen(),
     ProfileScreen(),
   ];
 
