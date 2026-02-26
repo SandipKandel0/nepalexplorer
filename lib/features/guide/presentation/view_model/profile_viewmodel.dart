@@ -4,6 +4,7 @@ import 'package:nepalexplorer/features/guide/domain/entities/guide_entity.dart';
 import 'package:nepalexplorer/core/api/api_client.dart';
 import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:dio/dio.dart';
+import 'dart:typed_data';
 
 // Provider for ProfileViewModel
 final profileViewModelProvider = ChangeNotifierProvider<ProfileViewModel>(
@@ -78,7 +79,9 @@ class ProfileViewModel extends ChangeNotifier {
     required String bio,
     required String languages,
     required String experience,
-    String? profilePictureUrl,
+    String? profilePicturePath,
+    Uint8List? profilePictureBytes,
+    String? profilePictureName,
   }) async {
     isLoading = true;
     notifyListeners();
@@ -90,15 +93,25 @@ class ProfileViewModel extends ChangeNotifier {
         'experience': experience,
       });
 
-      // Add profile picture if selected (it's a file path)
-      if (profilePictureUrl != null && profilePictureUrl.isNotEmpty) {
+      // Add profile picture using bytes (web) or file path (mobile/desktop)
+      if (profilePictureBytes != null && profilePictureBytes.isNotEmpty) {
+        formData = FormData.fromMap({
+          'bio': bio,
+          'languages': languages,
+          'experience': experience,
+          'profilePicture': MultipartFile.fromBytes(
+            profilePictureBytes,
+            filename: profilePictureName ?? 'profile.jpg',
+          ),
+        });
+      } else if (profilePicturePath != null && profilePicturePath.isNotEmpty) {
         formData = FormData.fromMap({
           'bio': bio,
           'languages': languages,
           'experience': experience,
           'profilePicture': await MultipartFile.fromFile(
-            profilePictureUrl,
-            filename: profilePictureUrl.split('/').last,
+            profilePicturePath,
+            filename: profilePicturePath.split('/').last,
           ),
         });
       }

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,6 +18,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   File? _profileImage;
+  Uint8List? _profileImageBytes;
+  String? _profileImageName;
   final _picker = ImagePicker();
 
   final TextEditingController _nameController = TextEditingController();
@@ -77,9 +81,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (image != null) {
-      setState(() {
-        _profileImage = File(image.path);
-      });
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _profileImageBytes = bytes;
+          _profileImageName = image.name;
+          _profileImage = null;
+        });
+      } else {
+        setState(() {
+          _profileImage = File(image.path);
+          _profileImageBytes = null;
+          _profileImageName = image.name;
+        });
+      }
     }
   }
 
@@ -186,12 +201,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         bio: _bioController.text,
         languages: _languagesController.text,
         experience: _experienceController.text,
-        profilePictureUrl: _profileImage?.path,
+        profilePicturePath: _profileImage?.path,
+        profilePictureBytes: _profileImageBytes,
+        profilePictureName: _profileImageName,
       );
 
       if (viewModel.errorMessage == null) {
         setState(() {
           _profileImage = null;
+          _profileImageBytes = null;
+          _profileImageName = null;
           _profilePictureUrl = viewModel.guide?.profilePictureUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -251,12 +270,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage: _profileImage != null
+                      backgroundImage: _profileImageBytes != null
+                        ? MemoryImage(_profileImageBytes!)
+                        : _profileImage != null
                           ? FileImage(_profileImage!)
                           : _profilePictureUrl != null
-                              ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
-                              : null,
-                      child: (_profileImage == null && _profilePictureUrl == null)
+                            ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
+                            : null,
+                      child: (_profileImageBytes == null &&
+                          _profileImage == null &&
+                          _profilePictureUrl == null)
                           ? const Icon(Icons.person, size: 60)
                           : null,
                     ),
