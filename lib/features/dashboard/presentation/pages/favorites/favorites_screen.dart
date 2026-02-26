@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
-import 'destination_screen.dart';
-import 'destination_details_screen.dart';
+import '../destination/destination_screen.dart';
+import '../destination/destination_details_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
   const FavoritesScreen({super.key});

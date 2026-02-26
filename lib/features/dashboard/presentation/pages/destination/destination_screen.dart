@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:light/light.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
 import 'package:sensors_plus/sensors_plus.dart';
-import 'destination/destination_details_screen.dart';
+import 'destination_details_screen.dart';
 
 class DestinationScreen extends StatefulWidget {
   const DestinationScreen({super.key});

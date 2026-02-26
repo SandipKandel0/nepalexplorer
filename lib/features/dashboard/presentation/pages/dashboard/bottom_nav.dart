@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dashboard_screen.dart';
-import 'destination_screen.dart';
-import 'favorites_screen.dart';
-import 'profile_screen.dart';
+import '../destination/destination_screen.dart';
+import '../favorites/favorites_screen.dart';
+import '../profile/profile_screen.dart';
 
 class BottomNavScreen extends StatefulWidget {
   const BottomNavScreen({super.key});

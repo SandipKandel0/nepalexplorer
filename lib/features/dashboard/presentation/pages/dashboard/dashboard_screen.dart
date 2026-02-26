@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'destination_screen.dart';
-import 'guides_list_screen.dart';
+import '../destination/destination_screen.dart';
+import 'package:nepalexplorer/features/guide/presentation/pages/guides_list_screen.dart';
 import 'notifications_screen.dart';
-import 'favorites_screen.dart';
-import 'destination_details_screen.dart';
+import '../favorites/favorites_screen.dart';
+import '../destination/destination_details_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

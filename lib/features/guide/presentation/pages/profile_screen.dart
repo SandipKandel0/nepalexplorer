@@ -230,7 +230,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Guide Profile")),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text("Guide Profile"),
+      ),
       body: Consumer(
         builder: (context, ref, _) {
           final viewModel = ref.watch(profileViewModelProvider);

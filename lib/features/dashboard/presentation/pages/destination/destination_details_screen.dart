@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
-import 'guides_list_screen.dart';
+import 'package:nepalexplorer/features/guide/presentation/pages/guides_list_screen.dart';
 
 class DestinationDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> destination;

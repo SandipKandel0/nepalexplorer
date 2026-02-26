@@ -188,59 +188,87 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showRequestNotifications() {
-    showModalBottomSheet(
+    showGeneralDialog(
       context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
+      barrierDismissible: true,
+      barrierLabel: 'Notifications',
+      barrierColor: Colors.black45,
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (context, animation, secondaryAnimation) {
         final notifications = _requests.take(10).toList();
 
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Request Notifications',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 12),
-                if (notifications.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
-                    child: Text('No request notifications yet'),
-                  )
-                else
-                  ConstrainedBox(
-                    constraints: BoxConstraints(
-                      maxHeight: MediaQuery.of(context).size.height * 0.6,
-                    ),
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: notifications.length,
-                      separatorBuilder: (_, __) => const Divider(height: 1),
-                      itemBuilder: (context, index) {
-                        final request = notifications[index];
-                        final user = request['userName'] ?? 'A user';
-                        final destination = request['destinationName'] ?? 'a destination';
-                        final status = (request['status'] ?? 'pending').toString();
+        return Align(
+          alignment: Alignment.centerRight,
+          child: SafeArea(
+            child: FractionallySizedBox(
+              widthFactor: 0.86,
+              child: Material(
+                color: Colors.white,
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Request Notifications',
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.pop(context),
+                            icon: const Icon(Icons.close),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      if (notifications.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 20),
+                          child: Text('No request notifications yet'),
+                        )
+                      else
+                        Expanded(
+                          child: ListView.separated(
+                            itemCount: notifications.length,
+                            separatorBuilder: (_, __) => const Divider(height: 1),
+                            itemBuilder: (context, index) {
+                              final request = notifications[index];
+                              final user = request['userName'] ?? 'A user';
+                              final destination = request['destinationName'] ?? 'a destination';
+                              final status = (request['status'] ?? 'pending').toString();
 
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: const Icon(Icons.notifications),
-                          title: Text('$user sent a request'),
-                          subtitle: Text('$destination • ${status.toUpperCase()}'),
-                        );
-                      },
-                    ),
+                              return ListTile(
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.notifications),
+                                title: Text('$user sent a request'),
+                                subtitle: Text('$destination • ${status.toUpperCase()}'),
+                              );
+                            },
+                          ),
+                        ),
+                    ],
                   ),
-              ],
+                ),
+              ),
             ),
           ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final curvedAnimation = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+
+        return SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(1, 0),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: child,
         );
       },
     );
