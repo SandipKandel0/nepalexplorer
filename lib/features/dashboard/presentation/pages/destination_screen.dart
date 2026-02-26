@@ -1,6 +1,9 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:light/light.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
+import 'package:sensors_plus/sensors_plus.dart';
 import 'destination_details_screen.dart';
 
 class DestinationScreen extends StatefulWidget {
@@ -14,6 +17,11 @@ class _DestinationScreenState extends State<DestinationScreen> {
   late FavoritesService _favoritesService;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  StreamSubscription<AccelerometerEvent>? _accelerometerSub;
+  StreamSubscription<int>? _lightSub;
+  DateTime _lastShakeAt = DateTime.fromMillisecondsSinceEpoch(0);
+  int? _luxLevel;
+  bool _isLowLight = false;
 
   final List<Map<String, dynamic>> popularPlaces = const [
     {
@@ -69,12 +77,61 @@ class _DestinationScreenState extends State<DestinationScreen> {
         _searchQuery = _searchController.text.toLowerCase();
       });
     });
+    _startShakeDetection();
+    _startLightSensor();
   }
 
   @override
   void dispose() {
+    _accelerometerSub?.cancel();
+    _lightSub?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _startShakeDetection() {
+    _accelerometerSub = accelerometerEventStream().listen((event) {
+      final gX = event.x / 9.80665;
+      final gY = event.y / 9.80665;
+      final gZ = event.z / 9.80665;
+      final gForce = sqrt(gX * gX + gY * gY + gZ * gZ);
+
+      if (gForce > 2.7) {
+        final now = DateTime.now();
+        if (now.difference(_lastShakeAt) > const Duration(seconds: 2)) {
+          _lastShakeAt = now;
+          _refreshDestinations();
+        }
+      }
+    });
+  }
+
+  void _startLightSensor() {
+    final light = Light();
+    _lightSub = light.lightSensorStream.listen(
+      (luxValue) {
+        if (!mounted) return;
+        setState(() {
+          _luxLevel = luxValue;
+          _isLowLight = luxValue < 10;
+        });
+      },
+      onError: (_) {},
+    );
+  }
+
+  void _refreshDestinations() {
+    if (!mounted) return;
+    setState(() {
+      _searchController.clear();
+      _searchQuery = '';
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Refreshed destinations by shake'),
+        duration: Duration(seconds: 1),
+      ),
+    );
   }
 
   List<Map<String, dynamic>> _getFilteredPlaces() {
@@ -124,6 +181,29 @@ class _DestinationScreenState extends State<DestinationScreen> {
               ),
             ),
           ),
+          if (_luxLevel != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Row(
+                children: [
+                  Icon(
+                    _isLowLight ? Icons.dark_mode : Icons.wb_sunny,
+                    size: 16,
+                    color: _isLowLight ? Colors.indigo : Colors.orange,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    _isLowLight
+                        ? 'Low light detected ($_luxLevel lx)'
+                        : 'Light level: $_luxLevel lx',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: _isLowLight ? Colors.indigo : Colors.grey[700],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Expanded(
             child: filteredPlaces.isEmpty
                 ? Center(
