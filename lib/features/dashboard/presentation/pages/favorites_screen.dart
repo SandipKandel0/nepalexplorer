@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
+import 'destination_screen.dart';
 import 'destination_details_screen.dart';
 
 class FavoritesScreen extends StatefulWidget {
@@ -55,7 +56,12 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DestinationScreen(),
+                        ),
+                      );
                     },
                     child: const Text('Browse Destinations'),
                   ),

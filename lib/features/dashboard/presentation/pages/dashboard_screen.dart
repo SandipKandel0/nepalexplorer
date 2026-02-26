@@ -13,6 +13,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   final List<Map<String, dynamic>> destinations = const [
     {
@@ -58,7 +60,38 @@ class _DashboardScreenState extends State<DashboardScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.toLowerCase().trim();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  List<Map<String, dynamic>> _filteredDestinations() {
+    if (_searchQuery.isEmpty) {
+      return destinations;
+    }
+
+    return destinations
+        .where((item) =>
+            item['title'].toLowerCase().contains(_searchQuery) ||
+            item['location'].toLowerCase().contains(_searchQuery) ||
+            item['description'].toLowerCase().contains(_searchQuery))
+        .toList();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final filteredDestinations = _filteredDestinations();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -93,10 +126,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 style: TextStyle(fontSize: 15, color: Color.fromARGB(255, 39, 46, 44))),
             const SizedBox(height: 16),
             TextField(
+              controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search Destination',
                 prefixIcon: const Icon(Icons.search),
-                suffixIcon: const Icon(Icons.filter_list),
+                suffixIcon: _searchQuery.isNotEmpty
+                    ? GestureDetector(
+                        onTap: () {
+                          _searchController.clear();
+                        },
+                        child: const Icon(Icons.clear),
+                      )
+                    : const Icon(Icons.filter_list),
                 filled: true,
                 fillColor: const Color.fromARGB(255, 222, 218, 218),
                 border: OutlineInputBorder(
@@ -143,33 +184,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 260,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: destinations.length,
-                separatorBuilder: (context, index) => const SizedBox(width: 20),
-                itemBuilder: (context, index) {
-                  final item = destinations[index];
-                  return DestinationCard(
-                    title: item['title'],
-                    location: item['location'],
-                    rating: item['rating'],
-                    image: item['image'],
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => DestinationDetailsScreen(
-                            destination: item,
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
-              ),
-            ),
+            filteredDestinations.isEmpty
+                ? Container(
+                    height: 120,
+                    alignment: Alignment.center,
+                    child: const Text(
+                      'No destinations found',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : SizedBox(
+                    height: 260,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: filteredDestinations.length,
+                      separatorBuilder: (context, index) => const SizedBox(width: 20),
+                      itemBuilder: (context, index) {
+                        final item = filteredDestinations[index];
+                        return DestinationCard(
+                          title: item['title'],
+                          location: item['location'],
+                          rating: item['rating'],
+                          image: item['image'],
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DestinationDetailsScreen(
+                                  destination: item,
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
             const SizedBox(height: 20),
             Container(
               padding: const EdgeInsets.all(16),
