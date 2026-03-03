@@ -13,6 +13,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final LocalAuthentication _localAuth = LocalAuthentication();
+  final UserSessionService _sessionService = UserSessionService();
+  bool _biometricLoading = false;
 
   bool _isLoading = false;
 
@@ -38,6 +41,62 @@ class _LoginScreenState extends State<LoginScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invalid username/email or password")),
       );
+    }
+  }
+
+  Future<void> _loginWithBiometrics() async {
+    try {
+      setState(() => _biometricLoading = true);
+
+      final isSupported = await _localAuth.isDeviceSupported();
+      final canCheckBiometrics = await _localAuth.canCheckBiometrics;
+
+      if (!isSupported || !canCheckBiometrics) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Biometric authentication is not available on this device')),
+          );
+        }
+        return;
+      }
+
+      final authenticated = await _localAuth.authenticate(
+        localizedReason: 'Authenticate to login to NepalExplorer',
+        options: const AuthenticationOptions(
+          biometricOnly: true,
+          stickyAuth: true,
+        ),
+      );
+
+      if (!authenticated) return;
+
+      final isLoggedIn = await _sessionService.isLoggedIn();
+      final role = await _sessionService.getRole();
+
+      if (!mounted) return;
+
+      if (!isLoggedIn) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No previous session found. Please login with email/password first.')),
+        );
+        return;
+      }
+
+      if (role == 'guide') {
+        Navigator.pushReplacementNamed(context, '/guide_home');
+      } else {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Biometric login failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _biometricLoading = false);
+      }
     }
   }
 
@@ -135,6 +194,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                     "Login",
                                     style: TextStyle(fontSize: 18),
                                   ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton.icon(
+                            onPressed: _biometricLoading ? null : _loginWithBiometrics,
+                            icon: _biometricLoading
+                                ? const SizedBox(
+                                    height: 18,
+                                    width: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Icon(Icons.fingerprint),
+                            label: Text(_biometricLoading ? 'Authenticating...' : 'Login with Biometrics'),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Colors.blueAccent),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),

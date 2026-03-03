@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -16,6 +18,8 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   File? _profileImage;
+  Uint8List? _profileImageBytes;
+  String? _profileImageName;
   final _picker = ImagePicker();
 
   final TextEditingController _nameController = TextEditingController();
@@ -77,9 +81,20 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
 
     if (image != null) {
-      setState(() {
-        _profileImage = File(image.path);
-      });
+      if (kIsWeb) {
+        final bytes = await image.readAsBytes();
+        setState(() {
+          _profileImageBytes = bytes;
+          _profileImageName = image.name;
+          _profileImage = null;
+        });
+      } else {
+        setState(() {
+          _profileImage = File(image.path);
+          _profileImageBytes = null;
+          _profileImageName = image.name;
+        });
+      }
     }
   }
 
@@ -186,12 +201,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         bio: _bioController.text,
         languages: _languagesController.text,
         experience: _experienceController.text,
-        profilePictureUrl: _profileImage?.path,
+        profilePicturePath: _profileImage?.path,
+        profilePictureBytes: _profileImageBytes,
+        profilePictureName: _profileImageName,
       );
 
       if (viewModel.errorMessage == null) {
         setState(() {
           _profileImage = null;
+          _profileImageBytes = null;
+          _profileImageName = null;
           _profilePictureUrl = viewModel.guide?.profilePictureUrl;
         });
         ScaffoldMessenger.of(context).showSnackBar(
@@ -211,7 +230,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Guide Profile")),
+      appBar: AppBar(
+        automaticallyImplyLeading: false,
+        title: const Text("Guide Profile"),
+      ),
       body: Consumer(
         builder: (context, ref, _) {
           final viewModel = ref.watch(profileViewModelProvider);
@@ -251,12 +273,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 60,
-                      backgroundImage: _profileImage != null
+                      backgroundImage: _profileImageBytes != null
+                        ? MemoryImage(_profileImageBytes!)
+                        : _profileImage != null
                           ? FileImage(_profileImage!)
                           : _profilePictureUrl != null
-                              ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
-                              : null,
-                      child: (_profileImage == null && _profilePictureUrl == null)
+                            ? NetworkImage(_getFullImageUrl(_profilePictureUrl))
+                            : null,
+                      child: (_profileImageBytes == null &&
+                          _profileImage == null &&
+                          _profilePictureUrl == null)
                           ? const Icon(Icons.person, size: 60)
                           : null,
                     ),
@@ -278,87 +304,97 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ],
                 ),
                 const SizedBox(height: 30),
-                TextField(
-                  controller: _nameController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: "Full Name",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _emailController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: "Email",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _phoneController,
-                  readOnly: true,
-                  decoration: const InputDecoration(
-                    labelText: "Phone Number",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _bioController,
-                  maxLines: 3,
-                  decoration: const InputDecoration(
-                    labelText: "Bio",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _experienceController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: "Years of Experience",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                TextField(
-                  controller: _languagesController,
-                  decoration: const InputDecoration(
-                    labelText: "Languages (comma separated)",
-                    border: OutlineInputBorder(),
-                    hintText: "e.g., English, Nepali, Hindi",
-                  ),
-                ),
-                const SizedBox(height: 30),
-                SizedBox(
+                Container(
                   width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: viewModel.isLoading
-                        ? null
-                        : () => _saveProfile(viewModel),
-                    child: viewModel.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text("Save Changes"),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade300),
                   ),
-                ),
-                const SizedBox(height: 15),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _logout,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red,
-                    ),
-                    child: const Text(
-                      "Logout",
-                      style: TextStyle(color: Colors.white),
-                    ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _nameController,
+                        decoration: const InputDecoration(
+                          labelText: "Full Name",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _emailController,
+                        readOnly: true,
+                        decoration: const InputDecoration(
+                          labelText: "Email",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _phoneController,
+                        decoration: const InputDecoration(
+                          labelText: "Phone Number",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _bioController,
+                        maxLines: 3,
+                        decoration: const InputDecoration(
+                          labelText: "Bio",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _experienceController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          labelText: "Years of Experience",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      TextField(
+                        controller: _languagesController,
+                        decoration: const InputDecoration(
+                          labelText: "Languages",
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 30),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: viewModel.isLoading
+                              ? null
+                              : () => _saveProfile(viewModel),
+                          child: viewModel.isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Text("Save Changes"),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _logout,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                          ),
+                          child: const Text(
+                            "Logout",
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
