@@ -7,7 +7,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:nepalexplorer/app.dart';
+
+import 'package:nepalexplorer/app/app.dart';
 
 
 void main() {
