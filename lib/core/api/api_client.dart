@@ -1,0 +1,134 @@
+import 'package:dio/dio.dart';
+import 'package:dio_smart_retry/dio_smart_retry.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+
+// Provider for ApiClient
+final apiClientProvider = Provider<ApiClient>((ref) {
+  return ApiClient();
+});
+
+class ApiClient {
+  late final Dio _dio;
+
+  ApiClient() {
+    _dio = Dio(
+      BaseOptions(
+        baseUrl: ApiEndpoints.baseUrl,
+        connectTimeout: ApiEndpoints.connectionTimeout,
+        receiveTimeout: ApiEndpoints.receiveTimeout,
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      ),
+    );
+
+    // Add interceptors
+    _dio.interceptors.add(_AuthInterceptor());
+
+    // Auto retry on network failures
+    _dio.interceptors.add(
+      RetryInterceptor(
+        dio: _dio,
+        retries: 3,
+        retryDelays: const [
+          Duration(seconds: 1),
+          Duration(seconds: 2),
+          Duration(seconds: 3),
+        ],
+        retryEvaluator: (error, attempt) {
+          // Retry on connection errors and timeouts, not on 4xx/5xx
+          return error.type == DioExceptionType.connectionTimeout ||
+              error.type == DioExceptionType.sendTimeout ||
+              error.type == DioExceptionType.receiveTimeout ||
+              error.type == DioExceptionType.connectionError;
+        },
+      ),
+    );
+
+    // Only add logger in debug mode
+    if (kDebugMode) {
+      _dio.interceptors.add(
+        PrettyDioLogger(
+          requestHeader: true,
+          requestBody: true,
+          responseBody: true,
+          responseHeader: false,
+          error: true,
+          compact: true,
+        ),
+      );
+    }
+  }
+
+  Dio get dio => _dio;
+  // Basic HTTP Requests
+ 
+  Future<Response> get(String path,
+          {Map<String, dynamic>? queryParameters, Options? options}) =>
+      _dio.get(path, queryParameters: queryParameters, options: options);
+
+  Future<Response> post(String path,
+          {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) =>
+      _dio.post(path, data: data, queryParameters: queryParameters, options: options);
+
+  Future<Response> put(String path,
+          {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) =>
+      _dio.put(path, data: data, queryParameters: queryParameters, options: options);
+
+  Future<Response> delete(String path,
+          {dynamic data, Map<String, dynamic>? queryParameters, Options? options}) =>
+      _dio.delete(path, data: data, queryParameters: queryParameters, options: options);
+
+  Future<Response> uploadFile(String path,
+          {required FormData formData, Options? options, ProgressCallback? onSendProgress}) =>
+      _dio.post(path, data: formData, options: options, onSendProgress: onSendProgress);
+}
+
+// Auth Interceptor
+
+class _AuthInterceptor extends Interceptor {
+  final _storage = const FlutterSecureStorage();
+  static const String _tokenKey = 'auth_token';
+
+  @override
+  Future<void> onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    // Public endpoints that do NOT require auth
+    final publicEndpoints = [
+      ApiEndpoints.register,
+      ApiEndpoints.login,
+    ];
+
+    final isPublicEndpoint = publicEndpoints.any((endpoint) => options.path.startsWith(endpoint));
+
+    if (!isPublicEndpoint) {
+      try {
+        final token = await _storage.read(key: _tokenKey);
+        if (token != null && token.isNotEmpty) {
+          options.headers['Authorization'] = 'Bearer $token';
+        }
+      } catch (e) {
+        print('Error reading token: $e');
+      }
+    }
+
+    handler.next(options);
+  }
+
+  @override
+  Future<void> onError(DioException err, ErrorInterceptorHandler handler) async {
+    // Handle 401 Unauthorized - token expired
+    if (err.response?.statusCode == 401) {
+      try {
+        await _storage.delete(key: _tokenKey);
+      } catch (e) {
+        print('Error deleting token: $e');
+      }
+    }
+    handler.next(err);
+  }
+}
