@@ -23,9 +23,6 @@ Future<bool> login(String email, String password) async {
     if (response['success'] == true &&
         response['data'] != null &&
         response['data']['role'] == 'guide') {
-
-      final token = response['token'];
-
       isLoading = false;
       notifyListeners();
       return true;

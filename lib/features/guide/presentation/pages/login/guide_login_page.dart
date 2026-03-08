@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nepalexplorer/core/api/api_client.dart';
 import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
+import 'package:nepalexplorer/features/auth/presentation/pages/forgot_password_screen.dart';
 import 'package:nepalexplorer/features/guide/presentation/pages/dashboard/guide_dashboard_page.dart';
 
 /// Provider for guide login view model
@@ -53,6 +55,16 @@ class GuideViewModel extends ChangeNotifier {
         errorMessage = response.data['message'] ?? 'Login failed';
         return false;
       }
+    } on DioException catch (e) {
+      isLoading = false;
+      final responseData = e.response?.data;
+      if (responseData is Map<String, dynamic>) {
+        errorMessage = responseData['message']?.toString() ?? 'Guide login failed';
+      } else {
+        errorMessage = 'Guide login failed';
+      }
+      notifyListeners();
+      return false;
     } catch (e) {
       isLoading = false;
       errorMessage = 'Server error: ${e.toString()}';
@@ -213,7 +225,12 @@ class _GuideLoginPageState extends ConsumerState<GuideLoginPage> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () {},
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(initialRole: 'guide'),
+                              ),
+                            ),
                             child: const Text(
                               "Forgot Password?",
                               style: TextStyle(
@@ -227,17 +244,16 @@ class _GuideLoginPageState extends ConsumerState<GuideLoginPage> {
 
                         const SizedBox(height: 15),
 
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          crossAxisAlignment: WrapCrossAlignment.center,
                           children: [
                             const Text(
                               "Don't have an account?",
                               style: TextStyle(fontSize: 16),
                             ),
                             TextButton(
-                              onPressed: () =>
-                                  Navigator.pushReplacementNamed(
-                                      context, '/register'),
+                              onPressed: () => Navigator.pushReplacementNamed(context, '/register'),
                               child: const Text(
                                 "Register",
                                 style: TextStyle(

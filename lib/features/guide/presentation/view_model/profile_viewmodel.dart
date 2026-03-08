@@ -14,8 +14,8 @@ final profileViewModelProvider = ChangeNotifierProvider<ProfileViewModel>(
 class ProfileViewModel extends ChangeNotifier {
   late ApiClient _apiClient;
   
-  ProfileViewModel() {
-    _apiClient = ApiClient();
+  ProfileViewModel({ApiClient? apiClient}) {
+    _apiClient = apiClient ?? ApiClient();
   }
 
   bool isLoading = false;
