@@ -1,6 +1,21 @@
 import 'package:dio/dio.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_api_model.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
+
+final authRemoteDatasourceProvider = Provider<AuthRemoteDatasource>((ref) {
+  return AuthRemoteDatasource(
+    dio: Dio(
+      BaseOptions(
+        baseUrl: ApiEndpoints.baseUrl,
+        connectTimeout: const Duration(seconds: 15),
+        receiveTimeout: const Duration(seconds: 15),
+        headers: {'Content-Type': 'application/json'},
+      ),
+    ),
+  );
+});
 
 class AuthRemoteDatasource {
   final Dio _dio;
@@ -65,20 +80,31 @@ class AuthRemoteDatasource {
     required String newPassword,
     required String confirmPassword,
   }) async {
-    final response = await _dio.post(
-      '/auth/forgot-password',
-      data: {
-        'email': email,
-        'role': role,
-        'newPassword': newPassword,
-        'confirmPassword': confirmPassword,
-      },
-    );
+    try {
+      final response = await _dio.post(
+        '/auth/forgot-password',
+        data: {
+          'email': email,
+          'role': role,
+          'newPassword': newPassword,
+          'confirmPassword': confirmPassword,
+        },
+      );
 
-    final data = response.data;
-    if (data is Map<String, dynamic>) {
-      return data['success'] == true;
+      final data = response.data;
+      if (data is Map<String, dynamic>) {
+        return data['success'] == true;
+      }
+      return false;
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+      if (responseData is Map<String, dynamic>) {
+        final message = responseData['message'];
+        if (message is String && message.isNotEmpty) {
+          throw Exception(message);
+        }
+      }
+      throw Exception('Failed to reset password');
     }
-    return false;
   }
 }

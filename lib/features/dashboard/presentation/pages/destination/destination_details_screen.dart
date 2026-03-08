@@ -124,58 +124,29 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title and Location
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.destination['title'],
-                              style: const TextStyle(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on, size: 16, color: Colors.orange),
-                                const SizedBox(width: 4),
-                                Expanded(
-                                  child: Text(
-                                    widget.destination['location'],
-                                    style: const TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 14,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                      Text(
+                        widget.destination['title'],
+                        style: const TextStyle(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Column(
+                      const SizedBox(height: 8),
+                      Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.star, size: 18, color: Colors.orange),
-                              const SizedBox(width: 4),
-                              Text(
-                                widget.destination['rating'],
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          const Icon(Icons.location_on, size: 16, color: Colors.orange),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              widget.destination['location'],
+                              style: const TextStyle(
+                                color: Colors.grey,
+                                fontSize: 14,
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            '(234 reviews)',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
                           ),
                         ],
                       ),
@@ -285,22 +256,16 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
                     children: [
                       _buildHotel(
                         'Hotel Mum\'s Home',
-                        '★★★★☆',
-                        '\$80 - \$120 per night',
                         '1.2 km away',
                       ),
                       const SizedBox(height: 12),
                       _buildHotel(
                         'Kathmandu Guest House',
-                        '★★★★☆',
-                        '\$60 - \$100 per night',
                         '0.8 km away',
                       ),
                       const SizedBox(height: 12),
                       _buildHotel(
                         'Hotel Nepal',
-                        '★★★☆☆',
-                        '\$40 - \$70 per night',
                         '1.5 km away',
                       ),
                     ],
@@ -395,7 +360,7 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
     );
   }
 
-  Widget _buildHotel(String name, String rating, String price, String distance) {
+  Widget _buildHotel(String name, String distance) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -424,23 +389,6 @@ class _DestinationDetailsScreenState extends State<DestinationDetailsScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  rating,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.orange,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
                   ),
                 ),
                 const SizedBox(height: 4),

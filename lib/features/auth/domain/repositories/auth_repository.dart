@@ -7,4 +7,10 @@ abstract interface class IAuthRepository{
   Future <Either<Failure, AuthEntity>> login(String email, String password);
   Future <Either<Failure, AuthEntity>> getCurrentUser();
   Future <Either<Failure, bool>> logout();
+  Future<Either<Failure, bool>> forgotPassword({
+    required String email,
+    required String role,
+    required String newPassword,
+    required String confirmPassword,
+  });
 }

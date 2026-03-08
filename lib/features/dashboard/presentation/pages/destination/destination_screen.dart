@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:light/light.dart';
 import 'package:nepalexplorer/core/services/favorites_service.dart';
+import 'package:proximity_sensor/proximity_sensor.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'destination_details_screen.dart';
 
@@ -18,10 +18,10 @@ class _DestinationScreenState extends State<DestinationScreen> {
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
   StreamSubscription<AccelerometerEvent>? _accelerometerSub;
-  StreamSubscription<int>? _lightSub;
+  StreamSubscription<int>? _proximitySub;
   DateTime _lastShakeAt = DateTime.fromMillisecondsSinceEpoch(0);
-  int? _luxLevel;
-  bool _isLowLight = false;
+  int? _proximityValue;
+  bool _isObjectNear = false;
 
   final List<Map<String, dynamic>> popularPlaces = const [
     {
@@ -78,13 +78,13 @@ class _DestinationScreenState extends State<DestinationScreen> {
       });
     });
     _startShakeDetection();
-    _startLightSensor();
+    _startProximitySensor();
   }
 
   @override
   void dispose() {
     _accelerometerSub?.cancel();
-    _lightSub?.cancel();
+    _proximitySub?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -106,14 +106,13 @@ class _DestinationScreenState extends State<DestinationScreen> {
     });
   }
 
-  void _startLightSensor() {
-    final light = Light();
-    _lightSub = light.lightSensorStream.listen(
-      (luxValue) {
+  void _startProximitySensor() {
+    _proximitySub = ProximitySensor.events.listen(
+      (eventValue) {
         if (!mounted) return;
         setState(() {
-          _luxLevel = luxValue;
-          _isLowLight = luxValue < 10;
+          _proximityValue = eventValue;
+          _isObjectNear = eventValue > 0;
         });
       },
       onError: (_) {},
@@ -181,24 +180,24 @@ class _DestinationScreenState extends State<DestinationScreen> {
               ),
             ),
           ),
-          if (_luxLevel != null)
+          if (_proximityValue != null)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Row(
                 children: [
                   Icon(
-                    _isLowLight ? Icons.dark_mode : Icons.wb_sunny,
+                    _isObjectNear ? Icons.sensors : Icons.sensors_off,
                     size: 16,
-                    color: _isLowLight ? Colors.indigo : Colors.orange,
+                    color: _isObjectNear ? Colors.teal : Colors.grey,
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _isLowLight
-                        ? 'Low light detected ($_luxLevel lx)'
-                        : 'Light level: $_luxLevel lx',
+                    _isObjectNear
+                        ? 'Proximity detected (near)'
+                        : 'Proximity state: far',
                     style: TextStyle(
                       fontSize: 12,
-                      color: _isLowLight ? Colors.indigo : Colors.grey[700],
+                      color: _isObjectNear ? Colors.teal : Colors.grey[700],
                     ),
                   ),
                 ],

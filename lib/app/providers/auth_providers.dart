@@ -1,11 +1,12 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:nepalexplorer/core/services/hive/hive_service.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/local/auth_local_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/datasources/remote/auth_remote_datasource.dart';
 import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
 import 'package:nepalexplorer/features/auth/data/repositories/auth_repository.dart';
-import 'package:nepalexplorer/features/auth/data/services/hive_auth_service.dart';
 import 'package:nepalexplorer/features/auth/domain/repositories/auth_repository.dart';
 import 'package:nepalexplorer/features/auth/domain/usecases/get_current_usecase.dart';
 import 'package:nepalexplorer/features/auth/domain/usecases/forgot_password_usecase.dart';
@@ -18,17 +19,17 @@ Future<void> initAuthStorage() async {
   if (!Hive.isAdapterRegistered(0)) {
     Hive.registerAdapter(AuthHiveModelAdapter());
   }
-  await Hive.openBox<AuthHiveModel>(HiveAuthService.authBoxName);
+  await Hive.openBox<AuthHiveModel>('authBox');
 }
 
 bool isAuthStorageReady() {
-  return Hive.isBoxOpen(HiveAuthService.authBoxName);
+  return Hive.isBoxOpen('authBox');
 }
 
 final dioProvider = Provider<Dio>((ref) {
   return Dio(
     BaseOptions(
-      baseUrl: 'http://10.0.2.2:3000/api',
+      baseUrl: ApiEndpoints.baseUrl,
       connectTimeout: const Duration(seconds: 15),
       receiveTimeout: const Duration(seconds: 15),
       headers: {
@@ -56,7 +57,7 @@ final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final localDatasource = ref.watch(authLocalDatasourceProvider);
   final remoteDatasource = ref.watch(authRemoteDatasourceProvider);
   return AuthRepository(
-    localDatasource: localDatasource,
+    authDatasource: localDatasource,
     remoteDatasource: remoteDatasource,
   );
 });

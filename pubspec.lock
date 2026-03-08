@@ -145,6 +145,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.4"
+  cli_config:
+    dependency: transitive
+    description:
+      name: cli_config
+      sha256: ac20a183a07002b700f0c25e61b7ee46b23c309d76ab7b7640a028f18e4d99ec
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   clock:
     dependency: transitive
     description:
@@ -193,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.1.2"
+  coverage:
+    dependency: transitive
+    description:
+      name: coverage
+      sha256: "5da775aa218eaf2151c721b16c01c7676fbfdd99cebba2bf64e8b807a28ff94d"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.15.0"
   cross_file:
     dependency: transitive
     description:
@@ -752,14 +768,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "3.0.2"
-  light:
-    dependency: "direct main"
-    description:
-      name: light
-      sha256: cb6551bf3ac336fcd5d0ce85ba3345a6f195785bb913f7541a976b4367aeb3a3
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   lints:
     dependency: transitive
     description:
@@ -768,46 +776,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "5.1.1"
-  local_auth:
-    dependency: "direct main"
-    description:
-      name: local_auth
-      sha256: "434d854cf478f17f12ab29a76a02b3067f86a63a6d6c4eb8fbfdcfe4879c1b7b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.3.0"
-  local_auth_android:
-    dependency: transitive
-    description:
-      name: local_auth_android
-      sha256: a0bdfcc0607050a26ef5b31d6b4b254581c3d3ce3c1816ab4d4f4a9173e84467
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.56"
-  local_auth_darwin:
-    dependency: transitive
-    description:
-      name: local_auth_darwin
-      sha256: "699873970067a40ef2f2c09b4c72eb1cfef64224ef041b3df9fdc5c4c1f91f49"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.6.1"
-  local_auth_platform_interface:
-    dependency: transitive
-    description:
-      name: local_auth_platform_interface
-      sha256: f98b8e388588583d3f781f6806e4f4c9f9e189d898d27f0c249b93a1973dd122
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
-  local_auth_windows:
-    dependency: transitive
-    description:
-      name: local_auth_windows
-      sha256: bc4e66a29b0fdf751aafbec923b5bed7ad6ed3614875d8151afe2578520b2ab5
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.0.11"
   logging:
     dependency: transitive
     description:
@@ -1016,6 +984,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.5.2"
+  pretty_dio_logger:
+    dependency: "direct main"
+    description:
+      name: pretty_dio_logger
+      sha256: "36f2101299786d567869493e2f5731de61ce130faa14679473b26905a92b6407"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.4.0"
+  proximity_sensor:
+    dependency: "direct main"
+    description:
+      name: proximity_sensor
+      sha256: d7771a9f8b92862a11056624582a58c2a9a46f9d67decd30772e7f79f70be706
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.3.10"
   pub_semver:
     dependency: transitive
     description:
@@ -1189,6 +1173,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.3.5"
+  source_maps:
+    dependency: transitive
+    description:
+      name: source_maps
+      sha256: "190222579a448b03896e0ca6eca5998fa810fda630c1d65e2f78b3f638f54812"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.10.13"
   source_span:
     dependency: transitive
     description:
@@ -1301,6 +1293,22 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.7"
+  test_cov:
+    dependency: "direct dev"
+    description:
+      name: test_cov
+      sha256: cb2506e782a7e2dde427c6d46dbac221efb9e37f9191bc57e473b89f7756d68f
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  test_cov_console:
+    dependency: "direct dev"
+    description:
+      name: test_cov_console
+      sha256: "73519e8be3689d73f5cffb652c12c310acacf48379396d834da937094836e65e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.2"
   timing:
     dependency: transitive
     description:

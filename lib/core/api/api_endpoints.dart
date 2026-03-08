@@ -3,10 +3,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
-  ApiEndpoints._();
+  ApiEndpoints._();  
 
-  static const bool isPhysicalDevice = false;
-  static const String _ipAddress = "192.168.1.1";
+  static const bool isPhysicalDevice = true;
+  static const String _ipAddress = "192.168.1.77";
   static const int _port = 3000;
 
   // Base URLs

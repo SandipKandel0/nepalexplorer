@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
 
-import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
+import 'package:nepalexplorer/core/api/api_client.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
+import 'package:nepalexplorer/core/services/storage/user_session_service.dart';
+import 'package:nepalexplorer/features/auth/presentation/pages/forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,9 +17,8 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final LocalAuthentication _localAuth = LocalAuthentication();
+  final ApiClient _apiClient = ApiClient();
   final UserSessionService _sessionService = UserSessionService();
-  bool _biometricLoading = false;
 
   bool _isLoading = false;
 
@@ -24,79 +27,73 @@ class _LoginScreenState extends State<LoginScreen> {
 
     setState(() => _isLoading = true);
 
-    // Use HiveAuthStorage
-    final success = await HiveAuthStorage.login(
-      _usernameController.text.trim(),
-      _passwordController.text.trim(),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login successful!")),
-      );
-      Navigator.pushReplacementNamed(context, '/dashboard'); // Change to your dashboard route
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid username/email or password")),
-      );
-    }
-  }
-
-  Future<void> _loginWithBiometrics() async {
     try {
-      setState(() => _biometricLoading = true);
-
-      final isSupported = await _localAuth.isDeviceSupported();
-      final canCheckBiometrics = await _localAuth.canCheckBiometrics;
-
-      if (!isSupported || !canCheckBiometrics) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Biometric authentication is not available on this device')),
-          );
-        }
-        return;
-      }
-
-      final authenticated = await _localAuth.authenticate(
-        localizedReason: 'Authenticate to login to NepalExplorer',
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          stickyAuth: true,
-        ),
+      final response = await _apiClient.post(
+        ApiEndpoints.login,
+        data: {
+          'email': _usernameController.text.trim(),
+          'password': _passwordController.text.trim(),
+        },
       );
 
-      if (!authenticated) return;
+      setState(() => _isLoading = false);
 
-      final isLoggedIn = await _sessionService.isLoggedIn();
-      final role = await _sessionService.getRole();
+      final data = response.data;
+      if (response.statusCode == 200 && data is Map<String, dynamic> && data['success'] == true) {
+        final payload = data['data'];
+        if (payload is! Map<String, dynamic>) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Login failed")),
+          );
+          return;
+        }
 
-      if (!mounted) return;
+        final token = data['token']?.toString();
+        final userId = payload['_id']?.toString() ?? '';
+        final fullName = payload['fullName']?.toString() ?? '';
+        final email = payload['email']?.toString() ?? '';
+        final role = payload['role']?.toString() ?? 'user';
 
-      if (!isLoggedIn) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No previous session found. Please login with email/password first.')),
+        await _sessionService.storeUserSession(
+          userId: userId,
+          fullName: fullName,
+          email: email,
+          role: role,
+          token: token,
         );
-        return;
-      }
 
-      if (role == 'guide') {
-        Navigator.pushReplacementNamed(context, '/guide_home');
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login successful!")),
+        );
+
+        if (!mounted) return;
+        if (role == 'guide') {
+          Navigator.pushReplacementNamed(context, '/guide_login');
+        } else {
+          Navigator.pushReplacementNamed(context, '/home');
+        }
       } else {
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      if (mounted) {
+        final message = data is Map<String, dynamic>
+            ? (data['message'] ?? 'Invalid email or password')
+            : 'Invalid email or password';
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Biometric login failed: $e')),
+          SnackBar(content: Text(message.toString())),
         );
       }
-    } finally {
-      if (mounted) {
-        setState(() => _biometricLoading = false);
-      }
+    } on DioException catch (e) {
+      setState(() => _isLoading = false);
+      final responseData = e.response?.data;
+      final message = responseData is Map<String, dynamic>
+          ? (responseData['message'] ?? 'Login failed')
+          : 'Login failed';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message.toString())),
+      );
+    } catch (_) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login failed")),
+      );
     }
   }
 
@@ -157,14 +154,20 @@ class _LoginScreenState extends State<LoginScreen> {
                         TextFormField(
                           controller: _usernameController,
                           decoration: InputDecoration(
-                            labelText: "Email or Username",
+                            labelText: "Email",
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? "Email or Username is required"
-                              : null,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return "Email is required";
+                            }
+                            if (!value.contains('@')) {
+                              return "Enter a valid email";
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 20),
                         TextFormField(
@@ -196,34 +199,28 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 50,
-                          child: OutlinedButton.icon(
-                            onPressed: _biometricLoading ? null : _loginWithBiometrics,
-                            icon: _biometricLoading
-                                ? const SizedBox(
-                                    height: 18,
-                                    width: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Icon(Icons.fingerprint),
-                            label: Text(_biometricLoading ? 'Authenticating...' : 'Login with Biometrics'),
-                            style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: Colors.blueAccent),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
+                        const SizedBox(height: 20),
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.pushNamed(context, '/guide_login'),
+                          child: const Text(
+                            "Login as Guide",
+                            style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 8),
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: () =>
-                                Navigator.pushNamed(context, '/register'),
+                            onPressed: () => Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const ForgotPasswordScreen(initialRole: 'user'),
+                              ),
+                            ),
                             child: const Text(
                               "Forgot Password?",
                               style: TextStyle(

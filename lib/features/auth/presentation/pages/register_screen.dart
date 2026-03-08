@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nepalexplorer/core/services/storage/hive_auth_service.dart';
-import 'package:nepalexplorer/features/auth/data/models/auth_hive_model.dart';
+import 'package:dio/dio.dart';
+import 'package:nepalexplorer/core/api/api_client.dart';
+import 'package:nepalexplorer/core/api/api_endpoints.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -11,6 +12,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ApiClient _apiClient = ApiClient();
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
@@ -18,8 +20,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _experienceController = TextEditingController();
+  final TextEditingController _languagesController = TextEditingController();
 
   bool _isLoading = false;
+  bool _isGuide = false;
 
   Future<void> _register() async {
     if (!_formKey.currentState!.validate()) return;
@@ -33,27 +39,61 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    final success = await HiveAuthStorage.register(
-      AuthHiveModel(
-        authId: '',
-        fullName: _fullNameController.text.trim(),
-        email: _emailController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-        username: _usernameController.text.trim(),
-        password: _passwordController.text.trim(),
-      ),
-    );
-
-    setState(() => _isLoading = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration successful!")),
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.register,
+        data: {
+          'fullName': _fullNameController.text.trim(),
+          'email': _emailController.text.trim(),
+          'phoneNumber': _phoneController.text.trim(),
+          'username': _usernameController.text.trim(),
+          'password': _passwordController.text.trim(),
+          'role': _isGuide ? 'guide' : 'user',
+          if (_isGuide) 'bio': _bioController.text.trim(),
+          if (_isGuide)
+            'experience': int.tryParse(_experienceController.text.trim()) ?? 0,
+          if (_isGuide)
+            'languages': _languagesController.text
+                .split(',')
+                .map((language) => language.trim())
+                .where((language) => language.isNotEmpty)
+                .toList(),
+        },
       );
-      Navigator.pushReplacementNamed(context, '/login');
-    } else {
+
+      setState(() => _isLoading = false);
+
+      final data = response.data;
+      if (response.statusCode == 200 && data is Map<String, dynamic> && data['success'] == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Registration successful!")),
+        );
+        if (_isGuide) {
+          Navigator.pushReplacementNamed(context, '/guide_login');
+        } else {
+          Navigator.pushReplacementNamed(context, '/login');
+        }
+      } else {
+        final message = data is Map<String, dynamic>
+            ? (data['message'] ?? 'Registration failed')
+            : 'Registration failed';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message.toString())),
+        );
+      }
+    } on DioException catch (e) {
+      setState(() => _isLoading = false);
+      final responseData = e.response?.data;
+      final message = responseData is Map<String, dynamic>
+          ? (responseData['message'] ?? 'Registration failed')
+          : 'Registration failed';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Registration failed: Email already exists")),
+        SnackBar(content: Text(message.toString())),
+      );
+    } catch (_) {
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Registration failed')),
       );
     }
   }
@@ -175,6 +215,70 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             value == null || value.isEmpty ? "Confirm your password" : null,
                       ),
                       const SizedBox(height: 25),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text("Register as Guide"),
+                          Switch(
+                            value: _isGuide,
+                            onChanged: (val) {
+                              setState(() {
+                                _isGuide = val;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      if (_isGuide) ...[
+                        const SizedBox(height: 8),
+                        TextFormField(
+                          controller: _bioController,
+                          decoration: InputDecoration(
+                            labelText: "Bio",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          maxLines: 3,
+                          validator: (value) => !_isGuide
+                              ? null
+                              : (value == null || value.isEmpty
+                                  ? "Bio is required for guide"
+                                  : null),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _experienceController,
+                          keyboardType: TextInputType.number,
+                          decoration: InputDecoration(
+                            labelText: "Years of Experience",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) => !_isGuide
+                              ? null
+                              : (value == null || value.isEmpty
+                                  ? "Experience is required for guide"
+                                  : null),
+                        ),
+                        const SizedBox(height: 20),
+                        TextFormField(
+                          controller: _languagesController,
+                          decoration: InputDecoration(
+                            labelText: "Languages (comma separated)",
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          validator: (value) => !_isGuide
+                              ? null
+                              : (value == null || value.isEmpty
+                                  ? "Languages are required for guide"
+                                  : null),
+                        ),
+                        const SizedBox(height: 25),
+                      ],
                       SizedBox(
                         width: double.infinity,
                         height: 50,

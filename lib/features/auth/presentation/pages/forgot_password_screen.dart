@@ -3,7 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:nepalexplorer/features/auth/presentation/view_model/auth_view_model.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
-  const ForgotPasswordScreen({super.key});
+  final String initialRole;
+
+  const ForgotPasswordScreen({
+    super.key,
+    this.initialRole = 'user',
+  });
 
   @override
   ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
@@ -15,8 +20,14 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
   final TextEditingController _confirmPasswordController = TextEditingController();
 
-  String _selectedRole = 'user';
+  late String _selectedRole;
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedRole = widget.initialRole;
+  }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
